@@ -16,6 +16,11 @@ Built for the Qloo Agentic Hackathon. MIT licensed.
 4. **Session Mode.** One calm item at a time on a tablet: big poster or cover, big type, one play button. The caregiver taps how the person reacted: *Lit up*, *Sang or talked along*, *Neutral*, *Upset*. Upset stops the item immediately and offers a favourite instead.
 5. **Learning.** Reactions are applied deterministically (`sang_along +2`, `lit_up +1`, `upset` → excluded forever plus its strongest genre tag). Liked items are promoted into the Qloo signal and the agent expands the profile to v2, showing exactly what changed and why.
 
+### Also built
+
+- **Facility mode** (`/facility`). An activities director picks 2-5 residents. Encore pools their seeds into one Qloo query per domain and puts first the picks whose top explainability drivers belong to the most residents ("Connects Dorothy, Roberto, Margaret"), then composes a group session that addresses the whole room.
+- **Common Ground** (on any profile). A caregiver adds up to three of their own favourites. Qloo Analysis Compare (`/v2/insights/compare`) finds the taste they share, and insights seeded with both people surface things to enjoy together, each attributed to both sides ("From Dorothy's Roman Holiday and your Norah Jones").
+
 ### For judges
 
 - **Generic AI vs Encore.** On any session, "Compare with a generic AI" asks the same model, with the same intake and no tools, for a session, then computes the differences: memory-test questions, new finds versus repeats of the seeds, traceability, era match, and real playable media.
@@ -34,6 +39,7 @@ Qloo endpoints and parameter families used:
 | `GET /v2/insights` | Every recommendation | `filter.type`, `signal.interests.entities`, `signal.demographics.age`, `filter.release_year.min/max`, `filter.publication_year.min/max`, `filter.release_country`, `filter.location` (locality ID or WKT), `filter.location.radius`, `filter.tags`, `filter.exclude.tags`, `filter.exclude.entities`, `filter.popularity.max`, `feature.explainability`, `take` |
 | `GET /v2/tags` | Avoid list and cuisines to tag IDs | `filter.query`, `filter.parents.types`, `feature.typo_tolerance` |
 | `GET /entities` | Seed details (images, Spotify/IMDb IDs, notable songs) | `entity_ids` |
+| `GET /v2/insights/compare` | Common Ground between caregiver and loved one | `a.signal.interests.entities`, `b.signal.interests.entities` |
 
 Things we learned by probing (details in [CLAUDE.md](CLAUDE.md)): parameters a type doesn't support are silently ignored, so `lib/qloo/params.ts` validates every request against a per-type whitelist; books need `filter.publication_year`, not `release_year`; `filter.release_country` needs full country names; location radius is in meters; artists have no era filter, so Encore post-filters on their career start year.
 
@@ -58,7 +64,9 @@ flowchart LR
   S -- compose --> A2
   S -- compare --> A4
   L -- learn --> A3
-  A1 & A3 --> Q --> QA[(Qloo API)]
+  F[Facility mode] --> A5[/api/groups/]
+  P -- common ground --> A6[/api/agent/common-ground/]
+  A1 & A3 & A5 & A6 --> Q --> QA[(Qloo API)]
   A1 & A2 & A3 & A4 --> LLM[(Claude via AI SDK)]
   A1 & A2 & A3 --> DB[(Supabase Postgres:<br/>profiles, items, sessions,<br/>reactions, agent_runs, qloo_cache)]
 ```
@@ -79,7 +87,7 @@ npm install
 npm run migrate                 # needs SUPABASE_ACCESS_TOKEN (a Supabase personal access token)
 npm run seed:personas           # builds the Dorothy, Roberto and Margaret templates with the live agent
 npm run dev                     # http://localhost:3000
-npm test                        # unit tests: param whitelist, era math, learning, session guardrails, client
+npm test                        # unit tests: param whitelist, era math, learning, session guardrails, group attribution, client
 ```
 
 | Variable | Required | Notes |

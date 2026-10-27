@@ -14,6 +14,8 @@ Encore is a taste-memory agent for family caregivers and memory-care staff.
 - **A Taste Profile, built live.** Encore works out the years the person was 10 to 30 (the "reminiscence bump", when memories are most vivid) and runs an agent over Qloo's taste graph: singers, films, TV, books, food spots and places near their hometown, all scoped to those years. The caregiver watches every step, and every item says why it was picked: "Because Dorothy loved Frank Sinatra 0.27 and Roman Holiday 0.30."
 - **Daily sessions.** The agent composes a 15-20 minute arc of 6-8 items (a warm opening song, variety in the middle, a calm closer) with prompts written to clinical guidance: invite and name things ("This is Dean Martin. Shall we listen?"), never test memory ("Do you remember…?").
 - **Session Mode.** A calm, tablet-first screen: one big item, big type, one play button, no timers and no auto-advance. A separate caregiver bar records *Lit up*, *Sang or talked along*, *Neutral* or *Upset*. Upset stops the item at once and offers something they already enjoyed.
+- **For memory-care facilities.** An activities director picks a few residents and Encore builds one group session from their pooled seeds, ranking picks by how many residents they connect, with every pick saying whose favourites led to it.
+- **Common Ground.** A caregiver adds three of their own favourites; Qloo Analysis Compare finds the taste they share with their loved one and suggests things to enjoy together.
 - **It learns.** Reactions update the profile deterministically. Songs they sang along to are promoted into the Qloo signal, upsetting items and their genre are excluded for good, and the agent expands the profile to v2 while you watch. A "What I learned" note explains the changes in plain words.
 
 ## Why Qloo
@@ -27,6 +29,8 @@ How we use the API:
 - **Explainability** powers every "Because they loved…" chip and the aggregate seed influence in the trace.
 - **`/v2/tags`** turns free text ("war footage", "fish and chips") into real tag IDs.
 - **`/entities`** fetches seed details: images, Spotify and IMDb IDs, and notable songs.
+- **`/v2/insights/compare`** (Analysis Compare) powers Common Ground: shared taste tags between a caregiver's favourites and their loved one's.
+- **Explainability as attribution.** In Facility mode, each pooled seed belongs to a resident, so the top explainability drivers say which residents a song connects.
 
 ## How we built it
 
@@ -58,8 +62,7 @@ The taste graph is most powerful as a *conversation partner* for an agent rather
 
 ## What's next
 
-- **Facility mode:** an activities director selects several residents and Encore builds one group session from their combined seeds, which is the per-bed business model for memory-care facilities.
-- **Common Ground:** Qloo Analysis Compare between a caregiver's own favourites and their loved one's, to find things they can genuinely enjoy together.
+- **A facility pilot:** Facility mode already builds group sessions; next is rosters, scheduling and per-bed pricing for memory-care operators.
 - **Southeast Asian catalog coverage** and caregiver prompts in more languages (we started with an Indonesian persona).
 - Exact songs and trailers through YouTube and TMDB, and sharing a session between family members.
 

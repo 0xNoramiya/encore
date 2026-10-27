@@ -31,6 +31,18 @@ npm run seed:personas [key]   # (re)build persona templates with the live agent
 - Persona templates are `profiles.is_persona_template = true`, read-only, built by `scripts/seed-personas.mts` (no Qloo data in git).
 - Art in `public/art/*.webp` was generated with Higgsfield (GPT Image 2.5), source PNGs not committed.
 
+## Architecture (M2, M3, stretch)
+
+- Sessions: `lib/agent/session.ts` (structured output, `noThinking`) → `lib/session.ts:finalizePlan` (only real non-excluded profile items, max 2 intake seeds, memory-test prompts replaced, deterministic fallback). Generic baseline in `lib/agent/generic.ts`, comparison metrics in `lib/compare.ts`.
+- Session Mode `app/(session)/s/[id]/play` (no site chrome). Reactions → `/api/sessions/[id]/reactions`.
+- Learning `lib/learning.ts` (pure, tested) → `lib/agent/learn.ts` (DB updates, LLM narrative with pronoun guard, then `runProfileAgent(mode: "expand")`, which excludes every existing item so all results are new).
+- Persona clone `lib/clone.ts` (server action `openPersona`) copies items, versions, runs, the ready session and the cached generic plan.
+- Facility mode `lib/agent/group.ts`: group profiles (`profiles.kind = 'group'`, `member_ids`), pooled seeds, ranking by distinct residents among each pick's top-3 explainability drivers.
+- Common Ground `lib/agent/common-ground.ts`: `/v2/insights/compare` tags (keep genre/theme/characteristic/style; drop region/instrument/audience) + insights seeded with both sides.
+- LLM notes: Sonnet 5.5 cannot fully disable thinking (it falls back to the lowest setting); keep `maxOutputTokens` generous or text gets truncated. The model sometimes uses pronouns despite instructions; the learning note falls back to a name-only summary when it does.
+- Dev server gotcha: after moving files between route groups, restart `next dev`; it served a stale root layout (double header) until restarted.
+- Deploy: `Dockerfile` (standalone) + `fly.toml` (syd). The image was built and the full judge path passed against it locally (`docker run -p 3100:3000 --env-file …`).
+
 ## Decisions log
 
 - Oct 28: Siti (Banjarmasin) dropped from the landing (thin film/TV/book coverage); "Southeast Asian catalog coverage" goes under What's Next. Margaret (1948, Liverpool: The Beatles, Cilla Black, Coronation Street) added as the third persona; coverage is excellent across all six domains.
