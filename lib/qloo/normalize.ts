@@ -14,6 +14,7 @@ export function normalizeEntity(raw: RawEntity): QlooEntity {
   const p = raw.properties ?? {};
   const type = raw.subtype ?? raw.types?.[0] ?? raw.type ?? "urn:entity";
   const explain = (raw.query?.explainability?.["signal.interests.entities"] ?? [])
+    .filter((e) => typeof e.score === "number")
     .map((e) => ({ entityId: e.entity_id, score: e.score }))
     .sort((a, b) => b.score - a.score);
 
@@ -24,12 +25,13 @@ export function normalizeEntity(raw: RawEntity): QlooEntity {
     year: p.release_year ?? p.publication_year ?? p.start_year,
     endYear: p.finale_year ?? p.end_year,
     image: p.image?.url,
-    popularity: raw.popularity,
+    popularity: raw.popularity ?? undefined,
     description: p.short_description ?? p.description,
     address: p.address,
     location: raw.location,
     releaseCountries: p.release_country,
     notableSongs: p.notable_songs,
+    ancestors: p.ancestors?.map((a) => ({ name: a.name, place: a.place, adminLevel: a.admin_level })),
     external: externalIds(raw),
     tags: (raw.tags ?? []).map((t) => ({ id: t.id ?? t.tag_id ?? t.value ?? "", name: t.name, type: t.type })),
     affinity: raw.query?.affinity,
@@ -57,6 +59,6 @@ export function normalizeTag(raw: { id: string; name: string; type: string; pare
     name: raw.name,
     type: raw.type,
     parentTypes: (raw.parents ?? []).map((p) => p.type),
-    popularity: raw.popularity,
+    popularity: raw.popularity ?? undefined,
   };
 }

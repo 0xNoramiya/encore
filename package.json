@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
-    "probe": "tsx --env-file=.env.local scripts/probe-qloo.mts"
+    "probe": "tsx --env-file=.env.local scripts/probe-qloo.mts",
+    "migrate": "tsx --env-file=.env.local scripts/migrate.mts",
+    "seed:personas": "tsx --env-file=.env.local scripts/seed-personas.mts"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^4.0.89",

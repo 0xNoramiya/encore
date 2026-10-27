@@ -1,9 +1,11 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
-  cacheComponents: true,
-  partialPrefetching: true,
+  // Standalone server bundle for the Fly.io Docker image.
+  output: "standalone",
+  images: {
+    remotePatterns: [{ protocol: "https", hostname: "images.qloo.com" }],
+  },
   turbopack: {
     rules: {
       "*.css": {

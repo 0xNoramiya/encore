@@ -21,7 +21,7 @@ export interface RawEntity {
   type?: string; // insights: "urn:entity"
   subtype?: string; // insights: "urn:entity:artist"
   types?: string[]; // search: ["urn:entity:artist"]
-  popularity?: number;
+  popularity?: number | null;
   disambiguation?: string;
   properties?: Record<string, unknown> & {
     image?: { url?: string };
@@ -37,6 +37,7 @@ export interface RawEntity {
     address?: string;
     short_description?: string;
     description?: string;
+    ancestors?: { name: string; place?: string; admin_level?: number }[];
   };
   external?: RawExternal;
   tags?: RawTag[];
@@ -75,6 +76,8 @@ export interface QlooEntity {
   location?: { lat: number; lon: number };
   releaseCountries?: string[];
   notableSongs?: string[];
+  /** Localities only: containing regions, nearest first (county, city, state, country). */
+  ancestors?: { name: string; place?: string; adminLevel?: number }[];
   external: { spotify?: string; imdb?: string; [source: string]: string | undefined };
   tags: { id: string; name: string; type: string }[];
   affinity?: number;

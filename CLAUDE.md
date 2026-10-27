@@ -18,7 +18,23 @@ Deadline: Oct 31 2026 03:45 UTC (feature freeze Oct 30 18:00 WITA).
 npm run dev       # next dev
 npm test          # vitest: params validator, era math, client (synthetic fixtures)
 npm run probe     # live Qloo probe → probe-output/ (gitignored)
+npm run migrate   # apply supabase/migrations/*.sql via the Management API (needs SUPABASE_ACCESS_TOKEN)
+npm run seed:personas [key]   # (re)build persona templates with the live agent
 ```
+
+## Architecture (M1)
+
+- `proxy.ts` sets the anonymous `encore_ws` cookie; `lib/workspace.ts` ensures the row. No login.
+- Intake: `/api/locality` (Qloo locality search → hometown + film country), `/api/resolve` (multi-type search, era-aware ranking in `lib/seeds.ts`, food → place tags), `/api/profiles` (create).
+- Profile build: `/api/agent/profile` streams NDJSON (`lib/agent/events.ts`). `lib/agent/profile.ts` runs deterministic pre-steps (era window, seed entities), then an AI SDK 7 `streamText` loop (`stopWhen: [isStepCount(12), hasToolCall("save_profile")]`) over tools in `lib/agent/tools.ts`, then saves items, resolves media and snapshots `profile_versions`.
+- Guardrails: `buildInsightsParams` fills era/country/location/age/default exclusions server-side (the model only overrides); `save_profile` drops any entityId not returned by Qloo in this run; deterministic fallback shortlist if the model never saves; rate limits via `hit_rate_limit()` SQL.
+- Persona templates are `profiles.is_persona_template = true`, read-only, built by `scripts/seed-personas.mts` (no Qloo data in git).
+- Art in `public/art/*.webp` was generated with Higgsfield (GPT Image 2.5), source PNGs not committed.
+
+## Decisions log
+
+- Oct 28: Siti (Banjarmasin) dropped from the landing (thin film/TV/book coverage); "Southeast Asian catalog coverage" goes under What's Next. Margaret (1948, Liverpool: The Beatles, Cilla Black, Coronation Street) added as the third persona; coverage is excellent across all six domains.
+- Oct 28: Repo private until submission (github.com/0xNoramiya/encore).
 
 Tooling notes: `.npmrc` sets `legacy-peer-deps=true` (npm 10.9 crashes with `edgesOut` on vitest's optional peers otherwise). Vitest config is `.mts` because package.json is CJS. One-off tsx scripts with top-level await need the `.mts` extension.
 
