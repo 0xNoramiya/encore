@@ -43,3 +43,8 @@ next-env.d.ts
 
 # Qloo probe output: real Qloo response data must never be committed
 /probe-output/
+
+# Demo video media (large, generated)
+/demo/assets/
+/demo/renders/
+/demo/video/media/
