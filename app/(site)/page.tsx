@@ -72,7 +72,7 @@ export default async function Home() {
               <li key={p.id}>
                 <Link href={`/p/${p.id}`} className="block rounded-lg border border-rule bg-card px-5 py-3 hover:border-ink/40">
                   <span className="font-display text-lg">{p.first_name}</span>
-                  <span className="ml-2 text-sm text-muted">born {p.birth_year}</span>
+                  <span className="ml-2 text-sm text-muted">{p.kind === "group" ? `group of ${p.member_ids.length}` : `born ${p.birth_year}`}</span>
                 </Link>
               </li>
             ))}
