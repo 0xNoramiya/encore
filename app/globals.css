@@ -1,0 +1,36 @@
+@import "tailwindcss";
+
+:root {
+  --cream: oklch(0.97 0.015 85);
+  --paper: oklch(0.99 0.008 85);
+  --charcoal: oklch(0.24 0.01 60);
+  --muted: oklch(0.45 0.015 60);
+  --accent: oklch(0.55 0.13 45);
+  --line: oklch(0.88 0.015 80);
+}
+
+@theme inline {
+  --color-cream: var(--cream);
+  --color-paper: var(--paper);
+  --color-charcoal: var(--charcoal);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-line: var(--line);
+  --font-display: var(--font-display);
+  --font-sans: var(--font-ui);
+}
+
+body {
+  background: var(--cream);
+  color: var(--charcoal);
+  font-family: var(--font-ui), system-ui, sans-serif;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
