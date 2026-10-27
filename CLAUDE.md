@@ -40,6 +40,10 @@ npm run seed:personas [key]   # (re)build persona templates with the live agent
 - Facility mode `lib/agent/group.ts`: group profiles (`profiles.kind = 'group'`, `member_ids`), pooled seeds, ranking by distinct residents among each pick's top-3 explainability drivers.
 - Common Ground `lib/agent/common-ground.ts`: `/v2/insights/compare` tags (keep genre/theme/characteristic/style; drop region/instrument/audience) + insights seeded with both sides.
 - LLM notes: Sonnet 5.5 cannot fully disable thinking (it falls back to the lowest setting); keep `maxOutputTokens` generous or text gets truncated. The model sometimes uses pronouns despite instructions; the learning note falls back to a name-only summary when it does.
+- Languages: `lib/languages.ts` (first non-English language). The composer adds `promptNative`; `finalizePlan` keeps it as `promptAlt` only if the English prompt survived and the translation passes `isSafePrompt` (multi-language regex). Session intros with gendered pronouns fall back to neutral copy (`GENDERED`).
+- Years picture: `lib/timeline.ts` (pure layout, tested) + `components/YearsTimeline.tsx`. Music has no song years, so singers sit in an unlabelled-by-year "radio" lane.
+- Report: `lib/report.ts` (pure) + `app/(site)/p/[id]/report`. Example history: `scripts/seed-history.mts` (two real rounds per persona with scripted taps, `sessions.is_example = true`, backdated). Clones copy all sessions and reactions.
+- Re-seeding order for templates: `npm run seed:personas` then `npx tsx --env-file=.env.local scripts/seed-history.mts`.
 - Dev server gotcha: after moving files between route groups, restart `next dev`; it served a stale root layout (double header) until restarted.
 - Deploy: `Dockerfile` (standalone) + `fly.toml` (syd). The image was built and the full judge path passed against it locally (`docker run -p 3100:3000 --env-file …`).
 

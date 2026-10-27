@@ -16,6 +16,9 @@ Encore is a taste-memory agent for family caregivers and memory-care staff.
 - **Session Mode.** A calm, tablet-first screen: one big item, big type, one play button, no timers and no auto-advance. A separate caregiver bar records *Lit up*, *Sang or talked along*, *Neutral* or *Upset*. Upset stops the item at once and offers something they already enjoyed.
 - **For memory-care facilities.** An activities director picks a few residents and Encore builds one group session from their pooled seeds, ranking picks by how many residents they connect, with every pick saying whose favourites led to it.
 - **Common Ground.** A caregiver adds three of their own favourites; Qloo Analysis Compare finds the taste they share with their loved one and suggests things to enjoy together.
+- **Their years, as a picture.** A timeline of the reminiscence window with the films, shows and books Encore found placed at their years.
+- **In their own language.** Many people with dementia hold on to their first language longest, so when it isn't English, every caregiver prompt is also written in it ("Este es Pedro Infante. ¿Lo escuchamos juntos?") and checked by the same clinical rule.
+- **Engagement report.** What works for this person by kind and by Qloo genre, best moments, what's kept out, and a printable activity log, the kind of record memory-care facilities keep for activity participation.
 - **It learns.** Reactions update the profile deterministically. Songs they sang along to are promoted into the Qloo signal, upsetting items and their genre are excluded for good, and the agent expands the profile to v2 while you watch. A "What I learned" note explains the changes in plain words.
 
 ## Why Qloo
@@ -54,6 +57,7 @@ How we use the API:
 - The agent visibly adapts. It broadened a food search that came back empty, and when Roberto's food results weren't Mexican it retried with a cuisine tag on its own.
 - Every recommendation is traceable to the memories it came from, with a score.
 - The before/after: Profile v1 → v2 shows which favourites now steer the taste graph, what is out for good, and the new finds they led to.
+- Bilingual prompts that stay clinically safe: the never-test-memory rule is enforced in code for English, Spanish, French, Italian, Portuguese, German and Indonesian.
 - Session Mode is built for the person, not the demo: large type, large targets, no timers, and a calm path out when something upsets them.
 
 ## What we learned
