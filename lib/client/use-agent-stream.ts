@@ -3,6 +3,7 @@
 import { useCallback, useRef, useState } from "react";
 import type { AgentEvent } from "@/lib/agent/events";
 import type { AgentStep } from "@/lib/profiles";
+import type { Learned } from "@/lib/sessions";
 
 export type StreamStatus = "idle" | "running" | "done" | "error";
 
@@ -12,6 +13,7 @@ export function useAgentStream(url: string) {
   const [status, setStatus] = useState<StreamStatus>("idle");
   const [error, setError] = useState<string | null>(null);
   const [summary, setSummary] = useState<string | null>(null);
+  const [learned, setLearned] = useState<Learned | null>(null);
   const busy = useRef(false);
 
   const apply = useCallback((e: AgentEvent) => {
@@ -31,6 +33,8 @@ export function useAgentStream(url: string) {
         next[i] = { ...next[i], label: next[i].label + e.delta };
         return next;
       });
+    } else if (e.t === "learned") {
+      setLearned(e.learned);
     } else if (e.t === "done") {
       setSummary(e.summary);
       setStatus("done");
@@ -77,5 +81,5 @@ export function useAgentStream(url: string) {
     [url, apply],
   );
 
-  return { steps, status, error, summary, start };
+  return { steps, status, error, summary, learned, start };
 }

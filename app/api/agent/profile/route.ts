@@ -8,7 +8,7 @@ import { getWorkspaceId } from "@/lib/workspace";
 
 export const maxDuration = 300;
 
-const Body = z.object({ profileId: z.string().uuid(), mode: z.enum(["build", "expand"]).default("build") });
+const Body = z.object({ profileId: z.string().uuid(), mode: z.enum(["build", "rebuild", "expand"]).default("build") });
 
 /** Streams the profile agent's steps as NDJSON while it builds the Taste Profile. */
 export async function POST(req: Request) {
@@ -33,5 +33,10 @@ export async function POST(req: Request) {
     .maybeSingle();
   if (running) return Response.json({ error: "Already building", runId: running.id }, { status: 409 });
 
-  return ndjsonStream((emit) => runProfileAgent(profile, { mode: parsed.data.mode, emit }));
+  const mode = parsed.data.mode;
+  return ndjsonStream(async (emit) => {
+    // Rebuild live: drop the agent's picks (keeping seeds, promotions and exclusions) and run the full build again.
+    if (mode === "rebuild") await db().from("profile_items").delete().eq("profile_id", profile.id).eq("status", "active");
+    await runProfileAgent(profile, { mode: mode === "expand" ? "expand" : "build", emit });
+  });
 }

@@ -3,7 +3,6 @@
  * pre/post steps. Every step is streamed to the browser and saved to
  * agent_runs so the "How Encore thought" panel can replay it.
  */
-import { anthropic } from "@ai-sdk/anthropic";
 import { hasToolCall, isStepCount, streamText } from "ai";
 import { db, must } from "../db";
 import { decadesLabel } from "../era";
@@ -13,6 +12,7 @@ import { qloo } from "../qloo";
 import type { QlooEntity } from "../qloo/types";
 import type { AgentStep, Profile, ProfileItem, Why } from "../profiles";
 import { loadAgentContext, type AgentContext } from "./context";
+import { llm } from "./llm";
 import type { AgentEvent } from "./events";
 import { newRunState, profileTools, type RunState } from "./tools";
 
@@ -31,7 +31,10 @@ function snapshot(e: QlooEntity): ProfileItem["data"] {
   return {
     image: e.image,
     description: e.description,
-    tags: [...new Set(e.tags.filter((t) => /genre|style|cuisine/.test(t.type)).map((t) => t.name))].slice(0, 6),
+    tags: e.tags
+      .filter((t, i, all) => /genre|style|cuisine/.test(t.type) && all.findIndex((x) => x.name === t.name) === i)
+      .slice(0, 8)
+      .map((t) => ({ id: t.id, name: t.name })),
     notableSongs: e.notableSongs?.slice(0, 5),
     address: e.address,
     popularity: e.popularity,
@@ -68,13 +71,17 @@ How to work:
 1. ${caregiverAvoid.length ? "Resolve each avoid-list entry to Qloo tag IDs with qloo_tags_search, then pass the matching IDs as excludeTags in your qloo_insights calls." : "There is no avoid list, so skip tag resolution."}
 2. Call qloo_insights for ${mode === "expand" ? "music, film and tv (and others if the profile is thin)" : "every domain: music, film, tv, book, food, place"} in ONE step as parallel tool calls. Era, country, location, age and exclusions are filled in for you; pass fields only to override or broaden. For food, don't pass tags unless the automatic search comes back thin; if you do, use urn:tag:genre:place:restaurant:<cuisine> tags.
 3. If a domain returns fewer than 4 results, broaden it once (releaseCountry "any", wider years, or no tags). Never retry a domain more than once.
-4. Call save_profile once with a diverse shortlist: about 6-8 music, 4-6 film, 3-4 tv, 2-3 book, 3-4 food, 2-3 place (fewer when results are thin; skip a domain rather than pad it).
+4. ${
+    mode === "expand"
+      ? `Call save_profile once with 6-10 NEW picks, leaning toward the domains and styles of the seeds that were just promoted (${ctx.signalSeeds.filter((s) => ctx.items.some((i) => i.entity_id === s.id && i.status === "promoted" && i.why.length)).map((s) => s.name).join(", ") || "none"}). Everything you see is already new to the profile.`
+      : "Call save_profile once with a diverse shortlist: about 6-8 music, 4-6 film, 3-4 tv, 2-3 book, 3-4 food, 2-3 place (fewer when results are thin; skip a domain rather than pad it)."
+  }
    - Diversity: mix close matches with adjacent ones; avoid near-duplicates (not eight male crooners); vary genre and mood.
    - Prefer items from the reminiscence window. Skip anything modern, violent, sad, or wrong for a calm session, and anything like the avoid list.
    - For places and food, prefer long-standing, well-known spots and landmarks over chains and offices.
    - Only use entityIds from qloo_insights results.
    - reason: at most 15 words, concrete, plain English for a caregiver. Ground it in the result's tags, the seeds that drove it, or widely known facts. Never invent.
-   - summary: 2-3 warm sentences starting "${p.first_name}'s world:", naming the era, the place and the threads you found. Use ${p.first_name}'s name, never pronouns.
+   - summary: 2-3 warm sentences starting "${p.first_name}'s world:", naming the era, the place and the threads you found${mode === "expand" ? ", including what changed after the last session" : ""}. Refer to ${p.first_name} by name: never she, he, her, him, his or hers (pronouns are unknown).
 Before each batch of tool calls, write ONE short sentence (max 20 words) telling the caregiver what you are doing. No other prose, no markdown.`;
 }
 
@@ -97,7 +104,7 @@ export async function runProfileAgent(profile: Profile, { mode = "build", emit }
   };
 
   try {
-    const ctx = await loadAgentContext(profile);
+    const ctx = await loadAgentContext(profile, mode);
     const name = profile.first_name;
 
     upsertStep({
@@ -150,13 +157,13 @@ export async function runProfileAgent(profile: Profile, { mode = "build", emit }
     const thoughts = new Map<string, string>();
 
     const result = streamText({
-      model: anthropic(process.env.LLM_MODEL ?? "claude-sonnet-5-5"),
+      model: llm(),
       system: systemPrompt(ctx, mode),
       prompt: mode === "build" ? `Build ${name}'s Taste Profile.` : `Expand ${name}'s Taste Profile using the updated seeds and exclusions.`,
       tools,
       stopWhen: [isStepCount(MAX_STEPS), hasToolCall("save_profile")],
       abortSignal: AbortSignal.timeout(RUN_TIMEOUT_MS),
-      maxOutputTokens: 4000,
+      maxOutputTokens: 8000,
     });
 
     for await (const part of result.stream) {

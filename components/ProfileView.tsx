@@ -1,12 +1,15 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { DOMAINS, type Domain } from "@/lib/domains";
 import type { EraWindow } from "@/lib/era";
 import type { AgentStep, ProfileItem } from "@/lib/profiles";
 import { useAgentStream } from "@/lib/client/use-agent-stream";
+import { openPersona } from "@/app/actions/profiles";
 import { EraStrip } from "./EraStrip";
+import { PlanSessionButton } from "./PlanSessionButton";
 import { ItemCard } from "./ItemCard";
 import { TracePanel, TraceTimeline } from "./TraceTimeline";
 
@@ -29,9 +32,10 @@ export interface ProfileViewProps {
   steps: AgentStep[];
   canEdit: boolean;
   needsBuild: boolean;
+  sessions: { id: string; title: string; createdAt: string; done: boolean; started: boolean }[];
 }
 
-export function ProfileView({ profile, window, items, seeds, avoid, steps, canEdit, needsBuild }: ProfileViewProps) {
+export function ProfileView({ profile, window, items, seeds, avoid, steps, canEdit, needsBuild, sessions }: ProfileViewProps) {
   const router = useRouter();
   const build = useAgentStream("/api/agent/profile");
   const started = useRef(false);
@@ -79,8 +83,49 @@ export function ProfileView({ profile, window, items, seeds, avoid, steps, canEd
               </p>
             )}
           </div>
+          {!building && profile.isTemplate && (
+            <form action={openPersona} className="flex flex-col items-start gap-2">
+              <input type="hidden" name="templateId" value={profile.id} />
+              <button type="submit" className="rounded-full bg-accent px-7 py-3.5 text-lg font-bold text-paper">
+                Use {firstName}’s profile
+              </button>
+              <p className="text-sm text-muted">Opens your own copy, so you can play sessions and watch Encore learn from the reactions.</p>
+            </form>
+          )}
+          {!building && canEdit && visible.length > 0 && (
+            <div className="flex flex-wrap items-start gap-x-6 gap-y-3">
+              {sessions.find((x) => !x.started && !x.done) ? (
+                <Link href={`/s/${sessions.find((x) => !x.started && !x.done)!.id}`} className="rounded-full bg-accent px-7 py-3.5 text-lg font-bold text-paper">
+                  Open today’s session
+                </Link>
+              ) : (
+                <PlanSessionButton profileId={profile.id} label="Plan today’s session" />
+              )}
+              <button type="button" onClick={() => build.start({ profileId: profile.id, mode: "rebuild" })} className="py-3.5 font-bold text-accent underline-offset-4 hover:underline">
+                Rebuild live with Qloo
+              </button>
+            </div>
+          )}
         </div>
       </section>
+
+      {!building && sessions.length > 0 && (
+        <section className="border-t border-rule py-8">
+          <h2 className="mb-4 font-display text-2xl">Sessions</h2>
+          <ul className="flex flex-col divide-y divide-rule">
+            {sessions.map((s) => (
+              <li key={s.id} className="flex flex-wrap items-baseline justify-between gap-2 py-3">
+                <Link href={s.done ? `/s/${s.id}/done` : `/s/${s.id}`} className="font-display text-lg hover:text-accent">
+                  {s.title}
+                </Link>
+                <span className="text-sm text-muted">
+                  {new Date(s.createdAt).toLocaleDateString(undefined, { month: "short", day: "numeric" })}: {s.done ? "Played, see what Encore learned" : s.started ? "In progress" : "Ready to play"}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {(building || build.status === "error") && (
         <section className="mb-12 rounded-lg border border-rule bg-card px-5 py-6 sm:px-8" aria-live="polite">

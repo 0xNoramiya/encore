@@ -72,7 +72,15 @@ export interface ProfileItem {
   reason: string | null;
   why: Why[];
   media: Media | null;
-  data: { image?: string; description?: string; tags?: string[]; notableSongs?: string[]; address?: string; popularity?: number; external?: Record<string, string> };
+  data: {
+    image?: string;
+    description?: string;
+    tags?: { id: string; name: string }[];
+    notableSongs?: string[];
+    address?: string;
+    popularity?: number;
+    external?: Record<string, string>;
+  };
   added_in_version: number;
 }
 

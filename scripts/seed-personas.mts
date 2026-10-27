@@ -8,6 +8,8 @@
  */
 import { db, must } from "../lib/db";
 import { runProfileAgent } from "../lib/agent/profile";
+import { composeSession } from "../lib/agent/session";
+import { genericSession } from "../lib/agent/generic";
 import { filmCountryName } from "../lib/domains";
 import { qloo } from "../lib/qloo";
 import type { Profile } from "../lib/profiles";
@@ -132,6 +134,10 @@ async function seedPersona(def: PersonaDef) {
   });
   const { data: thoughts } = await db().from("agent_runs").select("steps").eq("profile_id", profile.id).order("created_at", { ascending: false }).limit(1).single();
   for (const s of (thoughts?.steps ?? []) as { kind: string; label: string }[]) if (s.kind === "thought") console.log(`  thought: ${s.label}`);
+  const built = must(await db().from("profiles").select("*").eq("id", profile.id).single(), "built persona") as Profile;
+  const [{ plan }, generic] = await Promise.all([composeSession(built), genericSession(built)]);
+  console.log(`  session: ${plan.title} (${plan.items.map((i) => i.title).join(", ")})`);
+  console.log(`  generic baseline: ${generic.items.length} items`);
   console.log(`  ${((Date.now() - t0) / 1000).toFixed(0)}s`);
 }
 

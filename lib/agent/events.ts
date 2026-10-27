@@ -1,10 +1,12 @@
 import type { AgentStep } from "../profiles";
+import type { Learned } from "../sessions";
 
 /** NDJSON events streamed from /api/agent/* to the browser. */
 export type AgentEvent =
   | { t: "run"; runId: string }
   | { t: "step"; step: AgentStep }
   | { t: "thought"; id: string; delta: string }
+  | { t: "learned"; learned: Learned }
   | { t: "done"; summary: string | null; itemCount: number }
   | { t: "error"; message: string };
 

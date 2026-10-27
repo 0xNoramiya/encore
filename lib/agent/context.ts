@@ -38,7 +38,7 @@ export interface AgentContext {
   names: Map<string, string>;
 }
 
-export async function loadAgentContext(profile: Profile): Promise<AgentContext> {
+export async function loadAgentContext(profile: Profile, mode: "build" | "expand" = "build"): Promise<AgentContext> {
   const { seeds, avoid, items } = await loadProfileBundle(profile.id);
   const entitySeeds: SeedRef[] = seeds
     .filter((s) => s.kind === "entity" && s.entity_id && s.confirmed)
@@ -62,7 +62,8 @@ export async function loadAgentContext(profile: Profile): Promise<AgentContext> 
     excludeEntityIds: [
       ...new Set([
         ...signalSeeds.map((s) => s.id),
-        ...items.filter((i) => i.status === "excluded").map((i) => i.entity_id),
+        // Expanding: everything already in the profile is excluded so every result is new.
+        ...items.filter((i) => mode === "expand" || i.status === "excluded").map((i) => i.entity_id),
         ...avoid.filter((a) => a.entity_id).map((a) => a.entity_id!),
       ]),
     ],

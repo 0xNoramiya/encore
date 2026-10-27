@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { openPersona } from "@/app/actions/profiles";
 import { db } from "@/lib/db";
 import { listWorkspaceProfiles } from "@/lib/profiles";
 import { getWorkspaceId } from "@/lib/workspace";
@@ -44,9 +45,12 @@ export default async function Home() {
                 Start for someone you love
               </Link>
               {templateIds.has("dorothy") && (
-                <Link href={`/p/${templateIds.get("dorothy")}`} className="rounded-full border border-ink/30 px-7 py-3.5 text-lg font-bold text-ink hover:border-ink/60">
-                  See Dorothy’s world
-                </Link>
+                <form action={openPersona}>
+                  <input type="hidden" name="templateId" value={templateIds.get("dorothy")} />
+                  <button type="submit" className="rounded-full border border-ink/30 px-7 py-3.5 text-lg font-bold text-ink hover:border-ink/60">
+                    Try Dorothy’s session
+                  </button>
+                </form>
               )}
             </div>
           </div>
@@ -88,21 +92,25 @@ export default async function Home() {
       </section>
 
       <section className="mx-auto w-full max-w-6xl border-t border-rule px-5 py-16 sm:px-8">
-        <h2 className="mb-8 font-display text-4xl">Try it with an example</h2>
+        <h2 className="mb-2 font-display text-4xl">Try it with an example</h2>
+        <p className="mb-8 max-w-[60ch] text-muted">Each example opens as your own copy, so you can play the session, tap reactions and watch Encore learn.</p>
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
           {personas.map((p) => (
-            <Link key={p.key} href={`/p/${templateIds.get(p.key)}`} className="group block">
-              <img src={p.art} alt="" className="aspect-[4/3] w-full rounded-lg object-cover" />
-              <h3 className="mt-4 font-display text-2xl group-hover:text-accent">{p.name}’s world</h3>
-              <p className="text-muted">{p.line}</p>
-              <p className="mt-1 text-sm text-ink/80">Loved {p.loved}</p>
-            </Link>
+            <form key={p.key} action={openPersona}>
+              <input type="hidden" name="templateId" value={templateIds.get(p.key)} />
+              <button type="submit" className="group block w-full text-left">
+                <img src={p.art} alt="" className="aspect-[4/3] w-full rounded-lg object-cover" />
+                <span className="mt-4 block font-display text-2xl group-hover:text-accent">Try {p.name}’s session</span>
+                <span className="block text-muted">{p.line}</span>
+                <span className="mt-1 block text-sm text-ink/80">Loved {p.loved}</span>
+              </button>
+            </form>
           ))}
           <Link href="/intake" className="group block">
             <img src="/art/keepsakes.webp" alt="" className="aspect-[4/3] w-full rounded-lg object-cover" />
-            <h3 className="mt-4 font-display text-2xl group-hover:text-accent">Someone you love</h3>
-            <p className="text-muted">Takes about two minutes</p>
-            <p className="mt-1 text-sm text-ink/80">Start with a few things they loved.</p>
+            <span className="mt-4 block font-display text-2xl group-hover:text-accent">Start for someone you love</span>
+            <span className="block text-muted">Takes about two minutes</span>
+            <span className="mt-1 block text-sm text-ink/80">Begin with a few things they loved.</span>
           </Link>
         </div>
       </section>

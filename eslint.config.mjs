@@ -9,6 +9,7 @@ const eslintConfig = defineConfig([
     rules: {
       // Remote posters/covers come from several hosts at arbitrary sizes; plain <img> is intended.
       "@next/next/no-img-element": "off",
+      "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_", varsIgnorePattern: "^_", destructuredArrayIgnorePattern: "^_" }],
     },
   },
   globalIgnores([".next/**", "out/**", "build/**", "next-env.d.ts"]),
