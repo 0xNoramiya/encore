@@ -9,6 +9,7 @@ import type { AgentStep, ProfileItem } from "@/lib/profiles";
 import { useAgentStream } from "@/lib/client/use-agent-stream";
 import { openPersona } from "@/app/actions/profiles";
 import { EraStrip } from "./EraStrip";
+import { CommonGround } from "./CommonGround";
 import { PlanSessionButton } from "./PlanSessionButton";
 import { ItemCard } from "./ItemCard";
 import { TracePanel, TraceTimeline } from "./TraceTimeline";
@@ -188,6 +189,8 @@ export function ProfileView({ profile, window, items, seeds, avoid, steps, canEd
               </section>
             );
           })}
+
+          {!isGroup && <CommonGround profileId={profile.id} firstName={firstName} />}
 
           {traceSteps.length > 0 && (
             <section className="border-t border-rule py-10">
