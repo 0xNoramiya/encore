@@ -50,3 +50,4 @@ next-env.d.ts
 /demo/video/media/
 /demo/video/.hyperframes/
 /demo/video/fonts/
+/demo/video/.thumbnails/
