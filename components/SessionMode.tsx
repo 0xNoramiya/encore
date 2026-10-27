@@ -162,7 +162,54 @@ function Media({ item }: { item: SessionItem }) {
   return null;
 }
 
-function Stage({ item, firstName, native }: { item: SessionItem; firstName: string; native: boolean }) {
+/** Plays the prompt in a calm ElevenLabs voice. Stops when the item, language or phase changes (unmount or new src). */
+function ReadAloud({ src }: { src: string }) {
+  const audio = useRef<HTMLAudioElement | null>(null);
+  const [state, setState] = useState<"idle" | "loading" | "playing" | "error">("idle");
+
+  useEffect(() => {
+    return () => {
+      audio.current?.pause();
+      audio.current = null;
+      setState("idle");
+    };
+  }, [src]);
+
+  async function toggle() {
+    if (state === "playing") {
+      audio.current?.pause();
+      setState("idle");
+      return;
+    }
+    if (!audio.current) {
+      const a = new Audio(src);
+      a.onended = () => setState("idle");
+      a.onerror = () => setState("error");
+      audio.current = a;
+    }
+    setState("loading");
+    try {
+      await audio.current.play();
+      setState("playing");
+    } catch {
+      setState("error");
+    }
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={toggle}
+      disabled={state === "loading" || state === "error"}
+      aria-pressed={state === "playing"}
+      className="min-h-16 self-start rounded-full border-2 border-ink px-8 text-2xl font-bold text-ink disabled:opacity-60"
+    >
+      {state === "loading" ? "Getting the voice ready…" : state === "playing" ? "Stop reading" : state === "error" ? "Voice unavailable" : "Read it aloud"}
+    </button>
+  );
+}
+
+function Stage({ item, firstName, native, voiceSrc }: { item: SessionItem; firstName: string; native: boolean; voiceSrc?: string }) {
   const alt = native ? item.promptAlt : undefined;
   const portrait = item.kind === "film_clip" || item.kind === "tv_clip" || item.kind === "book";
   return (
@@ -187,6 +234,7 @@ function Stage({ item, firstName, native }: { item: SessionItem; firstName: stri
         <p lang={alt ? langCode(alt.lang) : undefined} className="max-w-[30ch] font-display text-3xl leading-snug text-ink/90">
           {alt ? alt.text : item.prompt}
         </p>
+        {voiceSrc && <ReadAloud src={voiceSrc} />}
         {item.kind === "food" && <p className="text-[1.75rem] text-muted">Follow {firstName}’s diet and texture plan.</p>}
         <Media item={item} />
       </div>
@@ -194,7 +242,7 @@ function Stage({ item, firstName, native }: { item: SessionItem; firstName: stri
   );
 }
 
-export function SessionMode({ sessionId, firstName, plan, canEdit }: { sessionId: string; firstName: string; plan: SessionPlan; canEdit: boolean }) {
+export function SessionMode({ sessionId, firstName, plan, canEdit, voice = false }: { sessionId: string; firstName: string; plan: SessionPlan; canEdit: boolean; voice?: boolean }) {
   const [index, setIndex] = useState(0);
   const [phase, setPhase] = useState<Phase>("item");
   const [reactions, setReactions] = useState<Record<string, Reaction>>({});
@@ -275,7 +323,15 @@ export function SessionMode({ sessionId, firstName, plan, canEdit }: { sessionId
       </header>
 
       <div ref={headingRef} tabIndex={-1} className="flex flex-1 flex-col outline-none">
-        {phase === "item" && <Stage key={current.entityId} item={current} firstName={firstName} native={native} />}
+        {phase === "item" && (
+          <Stage
+            key={current.entityId}
+            item={current}
+            firstName={firstName}
+            native={native}
+            voiceSrc={voice ? `/api/sessions/${sessionId}/voice?entity=${encodeURIComponent(current.entityId)}&lang=${native && current.promptAlt ? "alt" : "en"}` : undefined}
+          />
+        )}
 
         {phase === "upset" && (
           <div className="mx-auto flex max-w-3xl flex-1 flex-col justify-center gap-8 px-6 py-10 text-center">
