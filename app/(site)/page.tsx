@@ -118,6 +118,21 @@ export default async function Home() {
       </section>
 
       <section className="mx-auto w-full max-w-6xl border-t border-rule px-5 py-16 sm:px-8">
+        <div className="grid gap-8 lg:grid-cols-[1fr_2fr] lg:items-center">
+          <h2 className="font-display text-4xl leading-tight">For memory-care facilities</h2>
+          <div>
+            <p className="max-w-[60ch] text-lg text-ink/85">
+              An activities director picks a few residents. Encore pools what each of them loved into one Qloo query and puts the songs, films and shows that connect the
+              most people first, with every pick showing whose favourites led to it.
+            </p>
+            <Link href="/facility" className="mt-5 inline-block rounded-full border border-ink/30 px-7 py-3.5 text-lg font-bold hover:border-ink/60">
+              Plan a group session
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      <section className="mx-auto w-full max-w-6xl border-t border-rule px-5 py-16 sm:px-8">
         <div className="grid gap-10 lg:grid-cols-[1fr_2fr]">
           <h2 className="font-display text-4xl leading-tight">What the research says, honestly</h2>
           <div className="grid gap-6 text-ink/85">

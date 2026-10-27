@@ -87,7 +87,8 @@ export async function runLearn(session: SessionRow, profile: Profile, emit: (e: 
   const narrative = await narrate(profile, result);
   step({ id: "narrate", kind: "tool", tool: "explain_learning", label: "Wrote what I learned", status: "done" });
 
-  const changed = result.promoted.length > 0 || result.excluded.length > 0;
+  // Group profiles learn weights and exclusions but don't re-expand (their signal comes from the residents).
+  const changed = profile.kind !== "group" && (result.promoted.length > 0 || result.excluded.length > 0);
   const learned: Learned = {
     narrative,
     promoted: result.promoted,

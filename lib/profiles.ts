@@ -18,6 +18,8 @@ export interface Profile {
   version: number;
   summary: string | null;
   created_at: string;
+  kind: "person" | "group";
+  member_ids: string[];
 }
 
 export interface Seed {

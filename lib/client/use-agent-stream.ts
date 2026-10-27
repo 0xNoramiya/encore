@@ -14,10 +14,13 @@ export function useAgentStream(url: string) {
   const [error, setError] = useState<string | null>(null);
   const [summary, setSummary] = useState<string | null>(null);
   const [learned, setLearned] = useState<Learned | null>(null);
+  const [runId, setRunId] = useState<string | null>(null);
   const busy = useRef(false);
 
   const apply = useCallback((e: AgentEvent) => {
-    if (e.t === "step") {
+    if (e.t === "run") {
+      setRunId(e.runId);
+    } else if (e.t === "step") {
       setSteps((prev) => {
         const i = prev.findIndex((s) => s.id === e.step.id);
         if (i < 0) return [...prev, e.step];
@@ -81,5 +84,5 @@ export function useAgentStream(url: string) {
     [url, apply],
   );
 
-  return { steps, status, error, summary, learned, start };
+  return { steps, status, error, summary, learned, runId, start };
 }

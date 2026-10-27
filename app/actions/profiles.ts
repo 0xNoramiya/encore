@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { clonePersona } from "@/lib/clone";
+import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { allow } from "@/lib/rate-limit";
 import { getWorkspaceId } from "@/lib/workspace";
@@ -18,4 +19,13 @@ export async function openPersona(formData: FormData) {
     if (data) redirect(`/s/${data.id}`);
   }
   redirect(`/p/${id}`);
+}
+
+/** Facility mode helper: copies every example persona into the visitor's workspace. */
+export async function addExampleResidents() {
+  const workspaceId = await getWorkspaceId();
+  if (!(await allow(`clone:${workspaceId}`, 30, 3600))) throw new Error("Too many copies this hour");
+  const { data } = await db().from("profiles").select("id").eq("is_persona_template", true);
+  for (const t of data ?? []) await clonePersona(t.id, workspaceId);
+  revalidatePath("/facility");
 }

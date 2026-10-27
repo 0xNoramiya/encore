@@ -24,7 +24,7 @@ const GRID: Record<Domain, string> = {
 };
 
 export interface ProfileViewProps {
-  profile: { id: string; firstName: string; birthYear: number; hometown: string; summary: string | null; version: number; isTemplate: boolean };
+  profile: { id: string; firstName: string; birthYear: number; hometown: string; summary: string | null; version: number; isTemplate: boolean; members?: { id: string; firstName: string; birthYear: number }[] };
   window: EraWindow;
   items: ProfileItem[];
   seeds: string[];
@@ -53,7 +53,8 @@ export function ProfileView({ profile, window, items, seeds, avoid, steps, canEd
   }, [build.status, router]);
 
   const building = build.status === "running" || (needsBuild && build.status === "idle");
-  const summary = (build.summary ?? profile.summary)?.replace(new RegExp(`^${firstName}'s world:\\s*`), "");
+  const isGroup = Boolean(profile.members?.length);
+  const summary = (build.summary ?? profile.summary)?.replace(new RegExp(`^${firstName}('s world)?:\\s*`), "");
   const visible = items.filter((i) => i.status !== "excluded");
   const traceSteps = build.steps.length ? build.steps : steps;
   const qlooCalls = traceSteps.reduce((n, s) => n + (s.qloo?.length ?? 0), 0);
@@ -63,15 +64,32 @@ export function ProfileView({ profile, window, items, seeds, avoid, steps, canEd
       <section className="grid gap-8 pb-12 pt-6 lg:grid-cols-[1.1fr_1fr] lg:items-end">
         <div>
           {profile.isTemplate && <p className="mb-3 text-sm font-bold text-accent">Example profile</p>}
-          <h1 className="font-display text-5xl leading-[1.05] text-ink sm:text-6xl">{firstName}’s world</h1>
+          <h1 className="font-display text-5xl leading-[1.05] text-ink sm:text-6xl">{isGroup ? firstName : `${firstName}’s world`}</h1>
           <p className="mt-3 text-muted">
-            Born {profile.birthYear} in {profile.hometown}
+            {isGroup ? (
+              <>
+                Group session for{" "}
+                {profile.members!.map((m, i) => (
+                  <span key={m.id}>
+                    {i > 0 && (i === profile.members!.length - 1 ? " and " : ", ")}
+                    <Link href={`/p/${m.id}`} className="underline underline-offset-4 hover:text-ink">
+                      {m.firstName}
+                    </Link>{" "}
+                    ({m.birthYear})
+                  </span>
+                ))}
+              </>
+            ) : (
+              <>
+                Born {profile.birthYear} in {profile.hometown}
+              </>
+            )}
           </p>
           {summary && <p className="mt-5 max-w-[60ch] text-lg leading-relaxed text-ink">{summary}</p>}
         </div>
         <div className="flex flex-col gap-5">
-          <EraStrip birthYear={profile.birthYear} window={window} firstName={firstName} />
-          <div className="text-sm">
+          {!isGroup && <EraStrip birthYear={profile.birthYear} window={window} firstName={firstName} />}
+          <div className={`text-sm ${isGroup ? "hidden" : ""}`}>
             <p>
               <span className="text-muted">What you told us: </span>
               {seeds.join(", ")}
@@ -92,6 +110,9 @@ export function ProfileView({ profile, window, items, seeds, avoid, steps, canEd
               <p className="text-sm text-muted">Opens your own copy, so you can play sessions and watch Encore learn from the reactions.</p>
             </form>
           )}
+          {!building && canEdit && visible.length > 0 && isGroup && (
+            <p className="text-sm text-muted">Picks that connect two or more residents are listed first. Reactions in group sessions adjust this group only.</p>
+          )}
           {!building && canEdit && visible.length > 0 && (
             <div className="flex flex-wrap items-start gap-x-6 gap-y-3">
               {sessions.find((x) => !x.started && !x.done) ? (
@@ -101,7 +122,7 @@ export function ProfileView({ profile, window, items, seeds, avoid, steps, canEd
               ) : (
                 <PlanSessionButton profileId={profile.id} label="Plan today’s session" />
               )}
-              <button type="button" onClick={() => {
+              <button type="button" hidden={isGroup} onClick={() => {
                   if (globalThis.confirm(`Rebuild ${firstName}’s world from scratch with Qloo? Seeds, favourites and exclusions are kept; the other picks are replaced.`)) build.start({ profileId: profile.id, mode: "rebuild" });
                 }} className="py-3.5 font-bold text-accent underline-offset-4 hover:underline">
                 Rebuild live with Qloo
@@ -161,7 +182,7 @@ export function ProfileView({ profile, window, items, seeds, avoid, steps, canEd
                 </h2>
                 <div className={`grid gap-x-5 gap-y-9 ${GRID[d]}`}>
                   {list.map((item) => (
-                    <ItemCard key={item.id} item={item} firstName={firstName} />
+                    <ItemCard key={item.id} item={item} firstName={firstName} lead={isGroup ? "Drawn from" : undefined} />
                   ))}
                 </div>
               </section>

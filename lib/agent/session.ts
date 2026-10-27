@@ -44,9 +44,13 @@ function itemLine(i: ProfileItem, h: History): string {
   return `- ${bits.join("; ")}`;
 }
 
-export function sessionSystemPrompt(profile: Profile, items: ProfileItem[], h: History): string {
+export function sessionSystemPrompt(profile: Profile, items: ProfileItem[], h: History, members: Profile[] = []): string {
   const w = reminiscenceWindow(profile.birth_year);
-  return `You compose a 15-20 minute reminiscence session for ${profile.first_name}, born ${profile.birth_year}, who grew up in ${profile.hometown} (${decadesLabel(w)}). A caregiver plays it on a tablet, one item at a time, and taps how ${profile.first_name} reacts.
+  const intro =
+    profile.kind === "group"
+      ? `You compose a 15-20 minute GROUP reminiscence session for "${profile.first_name}", a memory-care activity group: ${members.map((m) => `${m.first_name} (born ${m.birth_year}, ${m.hometown.split(",")[0]})`).join(", ")}. A staff member plays it on a big screen, one item at a time, and taps how the group reacts. Prefer items whose weight is 1: they connect two or more residents. Prompts address the whole group warmly ("Many of you danced to this one."), never single anyone out, and may mention which residents' favourites led here only in the intro.`
+      : `You compose a 15-20 minute reminiscence session for ${profile.first_name}, born ${profile.birth_year}, who grew up in ${profile.hometown} (${decadesLabel(w)}). A caregiver plays it on a tablet, one item at a time, and taps how ${profile.first_name} reacts.`;
+  return `${intro}
 
 Profile items (choose only from these entityIds):
 ${items.map((i) => itemLine(i, h)).join("\n")}
@@ -70,6 +74,10 @@ export async function composeSession(profile: Profile): Promise<{ sessionId: str
   const usable = items.filter((i) => i.status !== "excluded");
   if (!usable.length) throw new Error("Profile has no items yet");
   const history = await loadHistory(profile.id);
+  const members =
+    profile.kind === "group" && profile.member_ids.length
+      ? ((await db().from("profiles").select("*").in("id", profile.member_ids)).data ?? []) as Profile[]
+      : [];
   steps.push({
     id: "load",
     kind: "deterministic",
@@ -84,7 +92,7 @@ export async function composeSession(profile: Profile): Promise<{ sessionId: str
   try {
     const { output } = await generateText({
       model: llm(),
-      system: sessionSystemPrompt(profile, usable, history),
+      system: sessionSystemPrompt(profile, usable, history, members),
       prompt: `Compose today's session for ${profile.first_name}.`,
       output: Output.object({ schema: ModelPlanSchema }),
       abortSignal: AbortSignal.timeout(90_000),

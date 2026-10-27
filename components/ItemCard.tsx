@@ -27,7 +27,7 @@ function Cover({ item }: { item: ProfileItem }) {
   );
 }
 
-export function ItemCard({ item, firstName }: { item: ProfileItem; firstName: string }) {
+export function ItemCard({ item, firstName, lead }: { item: ProfileItem; firstName: string; lead?: string }) {
   const [listening, setListening] = useState(false);
   const m = item.media ?? {};
   const isSeed = item.status === "promoted" && item.added_in_version <= 1 && !item.why.length;
@@ -47,7 +47,7 @@ export function ItemCard({ item, firstName }: { item: ProfileItem; firstName: st
         {m.song && <p className="text-sm text-muted">Try “{m.song}”</p>}
         {item.reason && !isSeed && <p className="mt-1 text-sm text-ink/85">{item.reason}</p>}
       </div>
-      <Provenance why={item.why} firstName={firstName} compact />
+      <Provenance why={item.why} firstName={firstName} compact lead={lead} />
       <div className="-my-1 flex flex-wrap gap-x-4 text-sm font-bold [&>*]:inline-flex [&>*]:min-h-11 [&>*]:items-center">
         {m.spotifyEmbed && (
           <button type="button" onClick={() => setListening((v) => !v)} className="text-accent underline-offset-4 hover:underline" aria-expanded={listening}>

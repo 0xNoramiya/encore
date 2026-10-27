@@ -1,12 +1,12 @@
 import type { Why } from "@/lib/profiles";
 
 /** "Because Dorothy loved Frank Sinatra 0.27": straight from Qloo's explainability scores. */
-export function Provenance({ why, firstName, compact = false }: { why: Why[]; firstName: string; compact?: boolean }) {
+export function Provenance({ why, firstName, compact = false, lead }: { why: Why[]; firstName: string; compact?: boolean; lead?: string }) {
   if (!why.length) return null;
   const shown = why.slice(0, compact ? 2 : 3);
   return (
     <div className="flex flex-wrap items-center gap-1.5 text-xs" title="Qloo explainability: how much each of the things they loved contributed to this pick">
-      <span className="text-muted">Because {firstName} loved</span>
+      <span className="text-muted">{lead ?? `Because ${firstName} loved`}</span>
       {shown.map((w) => (
         <span key={w.entityId} className="inline-flex items-center gap-1.5 rounded-full bg-accent-soft px-2 py-0.5 text-ink">
           {w.name}
