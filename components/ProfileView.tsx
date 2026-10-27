@@ -101,7 +101,9 @@ export function ProfileView({ profile, window, items, seeds, avoid, steps, canEd
               ) : (
                 <PlanSessionButton profileId={profile.id} label="Plan today’s session" />
               )}
-              <button type="button" onClick={() => build.start({ profileId: profile.id, mode: "rebuild" })} className="py-3.5 font-bold text-accent underline-offset-4 hover:underline">
+              <button type="button" onClick={() => {
+                  if (globalThis.confirm(`Rebuild ${firstName}’s world from scratch with Qloo? Seeds, favourites and exclusions are kept; the other picks are replaced.`)) build.start({ profileId: profile.id, mode: "rebuild" });
+                }} className="py-3.5 font-bold text-accent underline-offset-4 hover:underline">
                 Rebuild live with Qloo
               </button>
             </div>

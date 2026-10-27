@@ -56,6 +56,8 @@ export default async function Home() {
           </div>
           <img
             src="/art/hero.webp"
+            width={1800}
+            height={1195}
             alt="A 1950s radio, records and a teacup on a kitchen table, with an older hand held gently by a younger one"
             className="w-full rounded-lg lg:rounded-l-none lg:[mask-image:linear-gradient(to_right,transparent,black_35%)]"
           />

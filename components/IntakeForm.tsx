@@ -228,18 +228,19 @@ export function IntakeForm() {
               }}
               placeholder="Brooklyn"
               autoComplete="off"
-              role="combobox"
-              aria-expanded={townOptions.length > 0}
-              aria-controls={`${ids}-towns`}
+              aria-describedby={`${ids}-towns-status`}
             />
+            <span id={`${ids}-towns-status`} className="sr-only" aria-live="polite">
+              {townOptions.length ? `${townOptions.length} matching places below` : ""}
+            </span>
             {townLoading && <span className="absolute right-4 top-3.5 text-sm text-muted">Looking…</span>}
             {town && <span className="absolute right-4 top-3.5 text-sm font-bold text-accent">Found</span>}
           </div>
           {townOptions.length > 0 && (
-            <ul id={`${ids}-towns`} className="mt-2 grid gap-1.5" role="listbox">
+            <ul id={`${ids}-towns`} className="mt-2 grid gap-1.5" aria-label="Matching places">
               {townOptions.map((t) => (
                 <li key={t.id}>
-                  <button type="button" role="option" aria-selected={false} onClick={() => pickTown(t)} className="w-full rounded-md border border-ink/15 bg-card px-4 py-3 text-left hover:border-ink/40">
+                  <button type="button" onClick={() => pickTown(t)} className="w-full rounded-md border border-ink/15 bg-card px-4 py-3 text-left hover:border-ink/40">
                     {t.label}
                   </button>
                 </li>
@@ -303,7 +304,7 @@ export function IntakeForm() {
                   <span className="font-bold">“{l.raw}”</span>
                   <span className="ml-2 text-sm text-muted">{SEED_KINDS[l.kind].label}</span>
                 </p>
-                <button type="button" onClick={() => setLoves((list) => list.filter((x) => x.key !== l.key))} className="text-sm font-bold text-muted hover:text-ink">
+                <button type="button" onClick={() => setLoves((list) => list.filter((x) => x.key !== l.key))} className="-my-2 min-h-11 px-1 text-sm font-bold text-muted hover:text-ink">
                   Remove
                 </button>
               </div>
@@ -359,14 +360,14 @@ export function IntakeForm() {
         </div>
         <div className="mt-4 flex flex-wrap gap-2">
           {AVOID_SUGGESTIONS.filter((s) => !avoid.includes(s)).map((s) => (
-            <button key={s} type="button" onClick={() => addAvoid(s)} className="rounded-full border border-dashed border-ink/30 px-3 py-1.5 text-sm hover:border-ink/60">
+            <button key={s} type="button" onClick={() => addAvoid(s)} className="min-h-11 rounded-full border border-dashed border-ink/30 px-4 text-sm hover:border-ink/60">
               + {s}
             </button>
           ))}
           {avoid.map((a) => (
-            <span key={a} className="inline-flex items-center gap-2 rounded-full bg-ink px-3 py-1.5 text-sm text-paper">
+            <span key={a} className="inline-flex items-center gap-1 rounded-full bg-ink py-0.5 pl-3 pr-0.5 text-sm text-paper">
               {a}
-              <button type="button" onClick={() => setAvoid((list) => list.filter((x) => x !== a))} aria-label={`Remove ${a}`} className="font-bold">
+              <button type="button" onClick={() => setAvoid((list) => list.filter((x) => x !== a))} aria-label={`Remove ${a}`} className="flex h-10 w-10 items-center justify-center rounded-full text-lg font-bold hover:bg-white/15">
                 ×
               </button>
             </span>

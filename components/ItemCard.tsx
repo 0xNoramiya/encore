@@ -48,7 +48,7 @@ export function ItemCard({ item, firstName }: { item: ProfileItem; firstName: st
         {item.reason && !isSeed && <p className="mt-1 text-sm text-ink/85">{item.reason}</p>}
       </div>
       <Provenance why={item.why} firstName={firstName} compact />
-      <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm font-bold">
+      <div className="-my-1 flex flex-wrap gap-x-4 text-sm font-bold [&>*]:inline-flex [&>*]:min-h-11 [&>*]:items-center">
         {m.spotifyEmbed && (
           <button type="button" onClick={() => setListening((v) => !v)} className="text-accent underline-offset-4 hover:underline" aria-expanded={listening}>
             {listening ? "Hide player" : "Listen"}

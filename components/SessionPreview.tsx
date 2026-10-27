@@ -64,7 +64,7 @@ function EncoreList({ items, firstName, editable, onMove, onRemove }: { items: S
               )}
             </div>
             {editable && (
-              <div className="mt-3 flex gap-4 text-sm font-bold">
+              <div className="mt-1 flex gap-4 text-sm font-bold [&>button]:min-h-11 [&>button]:px-1">
                 <button type="button" disabled={i === 0} onClick={() => onMove?.(i, -1)} className="text-ink/70 hover:text-ink disabled:opacity-30">
                   Move up
                 </button>
@@ -122,7 +122,7 @@ function Comparison({ generic, plan, firstName, window, seeds, seedIds }: { gene
           <ol className="flex flex-col divide-y divide-rule">
             {generic.items.map((g, i) => (
               <li key={i} className="flex gap-4 py-5">
-                <span className="w-6 shrink-0 pt-1 font-display text-2xl text-ink/40 tabular-nums">{i + 1}</span>
+                <span className="w-6 shrink-0 pt-1 font-display text-2xl text-ink/60 tabular-nums">{i + 1}</span>
                 <div className="min-w-0">
                   <p className="text-sm text-muted">
                     {KIND_LABEL[g.kind]}
@@ -213,11 +213,11 @@ export function SessionPreview({ sessionId, profileId, firstName, plan: initial,
         )}
       </div>
 
-      <div role="tablist" aria-label="View" className="mb-2 inline-flex rounded-full border border-ink/20 p-1">
-        <button role="tab" aria-selected={mode === "plan"} onClick={() => setMode("plan")} className={`rounded-full px-5 py-2 font-bold ${mode === "plan" ? "bg-ink text-paper" : "text-ink"}`}>
+      <div role="group" aria-label="View" className="mb-2 inline-flex flex-wrap rounded-full border border-ink/20 p-1">
+        <button type="button" aria-pressed={mode === "plan"} onClick={() => setMode("plan")} className={`min-h-11 rounded-full px-5 py-2 font-bold ${mode === "plan" ? "bg-ink text-paper" : "text-ink"}`}>
           Encore’s plan
         </button>
-        <button role="tab" aria-selected={mode === "compare"} onClick={showCompare} className={`rounded-full px-5 py-2 font-bold ${mode === "compare" ? "bg-ink text-paper" : "text-ink"}`}>
+        <button type="button" aria-pressed={mode === "compare"} onClick={showCompare} className={`min-h-11 rounded-full px-5 py-2 font-bold ${mode === "compare" ? "bg-ink text-paper" : "text-ink"}`}>
           Compare with a generic AI
         </button>
       </div>

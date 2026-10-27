@@ -5,11 +5,11 @@ import Link from "next/link";
 import type { Reaction } from "@/lib/learning";
 import type { SessionItem, SessionPlan } from "@/lib/session";
 
-const REACTION_BUTTONS: { value: Reaction; label: string }[] = [
-  { value: "lit_up", label: "Lit up" },
-  { value: "sang_along", label: "Sang or talked along" },
-  { value: "neutral", label: "Neutral" },
-  { value: "upset", label: "Upset" },
+const REACTION_BUTTONS: { value: Reaction; label: string; short: string }[] = [
+  { value: "lit_up", label: "Lit up", short: "Lit up" },
+  { value: "sang_along", label: "Sang or talked along", short: "Sang along" },
+  { value: "neutral", label: "Neutral", short: "Neutral" },
+  { value: "upset", label: "Upset", short: "Upset" },
 ];
 
 const KIND_WORD: Record<SessionItem["kind"], string> = { song: "Music", film_clip: "Film", tv_clip: "Television", place: "A place from home", food: "A taste of home", book: "A book" };
@@ -134,7 +134,7 @@ function Media({ item }: { item: SessionItem }) {
       <div className="flex flex-col gap-3">
         <SpotifyPlayer embedUrl={m.spotifyEmbed} title={item.title} />
         {m.song && m.youtubeSearch && (
-          <a href={m.youtubeSearch} target="_blank" rel="noreferrer" className="text-center text-xl font-bold text-accent underline underline-offset-4">
+          <a href={m.youtubeSearch} target="_blank" rel="noreferrer" className="flex min-h-14 items-center justify-center text-center text-[1.75rem] font-bold text-accent underline underline-offset-4">
             Find “{m.song}” on YouTube
           </a>
         )}
@@ -164,13 +164,13 @@ function Media({ item }: { item: SessionItem }) {
 function Stage({ item, firstName }: { item: SessionItem; firstName: string }) {
   const portrait = item.kind === "film_clip" || item.kind === "tv_clip" || item.kind === "book";
   return (
-    <div className="mx-auto grid w-full max-w-6xl flex-1 items-center gap-8 px-6 py-6 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] md:gap-14 md:px-10">
+    <div className="mx-auto grid w-full max-w-6xl flex-1 items-center gap-6 px-6 py-4 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] md:gap-14 md:px-10 md:py-6">
       <div className="flex justify-center">
         {item.media.image ? (
           <img
             src={item.media.image}
             alt=""
-            className={`${portrait ? "aspect-[2/3] max-h-[52vh] md:max-h-[64vh]" : item.kind === "song" ? "aspect-square max-h-[42vh] md:max-h-[56vh]" : "aspect-[4/3] max-h-[40vh] md:max-h-[52vh]"} w-auto max-w-full rounded-xl object-cover shadow-[0_20px_50px_-25px_rgba(36,33,29,0.6)]`}
+            className={`${portrait ? "aspect-[2/3] h-[34vh] md:h-[60vh]" : item.kind === "song" ? "aspect-square h-[30vh] md:h-[52vh]" : "aspect-[4/3] h-[26vh] md:h-[44vh]"} w-auto max-w-full bg-rule rounded-xl object-cover shadow-[0_20px_50px_-25px_rgba(36,33,29,0.6)]`}
           />
         ) : (
           <div className="flex aspect-square w-full max-w-sm items-end rounded-xl bg-ink p-6" aria-hidden>
@@ -178,12 +178,12 @@ function Stage({ item, firstName }: { item: SessionItem; firstName: string }) {
           </div>
         )}
       </div>
-      <div className="flex flex-col gap-6">
-        <p className="text-2xl text-muted">{KIND_WORD[item.kind]}</p>
-        <h1 className="font-display text-5xl leading-[1.05] text-ink md:text-7xl">{item.title}</h1>
+      <div className="flex flex-col gap-5 md:gap-6">
+        <p className="text-[1.75rem] text-muted">{KIND_WORD[item.kind]}</p>
+        <h1 className="font-display text-[2.75rem] leading-[1.05] text-ink md:text-7xl">{item.title}</h1>
         {item.year && <p className="-mt-3 text-3xl text-muted">{item.year}</p>}
         <p className="max-w-[30ch] font-display text-3xl leading-snug text-ink/90">{item.prompt}</p>
-        {item.kind === "food" && <p className="text-xl text-muted">Follow {firstName}’s diet and texture plan.</p>}
+        {item.kind === "food" && <p className="text-[1.75rem] text-muted">Follow {firstName}’s diet and texture plan.</p>}
         <Media item={item} />
       </div>
     </div>
@@ -262,7 +262,7 @@ export function SessionMode({ sessionId, firstName, plan, canEdit }: { sessionId
         {phase === "upset" && (
           <div className="mx-auto flex max-w-3xl flex-1 flex-col justify-center gap-8 px-6 py-10 text-center">
             <h1 className="font-display text-5xl leading-tight md:text-6xl">Let’s set that one aside.</h1>
-            <p className="text-2xl text-ink/80">Encore won’t show it again. Take a breath together. When you’re ready, you can play something {firstName} enjoyed.</p>
+            <p className="text-[1.75rem] leading-snug text-ink/80">Encore won’t show it again. Take a breath together. When you’re ready, you can play something {firstName} enjoyed.</p>
             <div className="flex flex-col gap-4">
               {bestSoFar && (
                 <button
@@ -279,7 +279,7 @@ export function SessionMode({ sessionId, firstName, plan, canEdit }: { sessionId
               <button type="button" onClick={() => setPhase("paused")} className="min-h-20 rounded-full border-2 border-ink px-8 text-2xl font-bold">
                 Pause the session
               </button>
-              <button type="button" onClick={() => go(1)} className="min-h-16 text-xl font-bold text-muted underline underline-offset-4">
+              <button type="button" onClick={() => go(1)} className="min-h-16 text-[1.75rem] font-bold text-muted underline underline-offset-4">
                 Go on to the next one
               </button>
             </div>
@@ -289,7 +289,7 @@ export function SessionMode({ sessionId, firstName, plan, canEdit }: { sessionId
         {phase === "paused" && (
           <div className="mx-auto flex max-w-3xl flex-1 flex-col justify-center gap-8 px-6 py-10 text-center">
             <h1 className="font-display text-5xl md:text-6xl">Paused</h1>
-            <p className="text-2xl text-ink/80">Take as long as you need. Ending early is fine; what you saw so far still helps Encore learn.</p>
+            <p className="text-[1.75rem] leading-snug text-ink/80">Take as long as you need. Ending early is fine; what you saw so far still helps Encore learn.</p>
             <div className="flex flex-col gap-4 sm:flex-row sm:justify-center">
               <button type="button" onClick={() => setPhase("item")} className="min-h-20 rounded-full bg-accent px-10 text-2xl font-bold text-paper">
                 Carry on
@@ -304,7 +304,7 @@ export function SessionMode({ sessionId, firstName, plan, canEdit }: { sessionId
         {phase === "end" && (
           <div className="mx-auto flex max-w-3xl flex-1 flex-col justify-center gap-8 px-6 py-10 text-center">
             <h1 className="font-display text-5xl leading-tight md:text-6xl">That’s today’s session.</h1>
-            <p className="text-2xl text-ink/80">
+            <p className="text-[1.75rem] leading-snug text-ink/80">
               {Object.keys(reactions).length
                 ? `You noted ${Object.keys(reactions).length} reactions${counts.sang_along ? `, including ${counts.sang_along} sing-along${counts.sang_along > 1 ? "s" : ""}` : ""}. Thank you for sharing this time with ${firstName}.`
                 : `Thank you for sharing this time with ${firstName}.`}
@@ -317,10 +317,10 @@ export function SessionMode({ sessionId, firstName, plan, canEdit }: { sessionId
       </div>
 
       {(phase === "item" || phase === "upset") && (
-        <section aria-label="For the caregiver" className="border-t-4 border-ink bg-ink px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4 text-paper md:px-10">
-          <div className="mx-auto flex max-w-6xl flex-col gap-3 lg:flex-row lg:items-center">
-            <p className="text-lg font-bold lg:w-44">How did {firstName} respond?</p>
-            <div className="grid flex-1 grid-cols-2 gap-3 md:grid-cols-4">
+        <section aria-label="For the caregiver" className="sticky bottom-0 z-10 border-t-4 border-ink bg-ink px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4 text-paper md:px-10">
+          <div className="mx-auto flex max-w-6xl flex-col gap-2.5 sm:gap-3 lg:flex-row lg:items-center">
+            <p className="text-base font-bold sm:text-lg lg:w-44">How did {firstName} respond?</p>
+            <div className="grid flex-1 grid-cols-4 gap-2 sm:gap-3">
               {REACTION_BUTTONS.map((b) => {
                 const selected = reactions[current.entityId] === b.value;
                 return (
@@ -328,21 +328,23 @@ export function SessionMode({ sessionId, firstName, plan, canEdit }: { sessionId
                     key={b.value}
                     type="button"
                     aria-pressed={selected}
+                    aria-label={b.label}
                     onClick={() => react(b.value)}
-                    className={`min-h-16 rounded-xl px-3 text-xl font-bold leading-tight transition-colors ${
+                    className={`min-h-16 rounded-xl px-1.5 text-base font-bold leading-tight transition-colors sm:px-3 sm:text-xl ${
                       selected ? (b.value === "upset" ? "bg-paper text-accent ring-4 ring-accent-soft" : "bg-paper text-ink ring-4 ring-accent") : "bg-white/10 text-paper hover:bg-white/20"
                     }`}
                   >
-                    {b.label}
+                    <span className="sm:hidden">{b.short}</span>
+                    <span className="hidden sm:inline">{b.label}</span>
                   </button>
                 );
               })}
             </div>
-            <div className="grid grid-cols-2 gap-3 lg:w-64">
-              <button type="button" onClick={() => go(-1)} disabled={index === 0 && !fallback} className="min-h-16 rounded-xl border-2 border-paper/40 text-xl font-bold disabled:opacity-30">
+            <div className="grid grid-cols-2 gap-2 sm:gap-3 lg:w-64">
+              <button type="button" onClick={() => go(-1)} disabled={index === 0 && !fallback} className="min-h-14 rounded-xl border-2 border-paper/40 text-xl font-bold disabled:opacity-30 sm:min-h-16">
                 Back
               </button>
-              <button type="button" onClick={() => go(1)} className="min-h-16 rounded-xl bg-paper text-xl font-bold text-ink">
+              <button type="button" onClick={() => go(1)} className="min-h-14 rounded-xl bg-paper text-xl font-bold text-ink sm:min-h-16">
                 {index === items.length - 1 && !fallback ? "Finish" : "Next"}
               </button>
             </div>

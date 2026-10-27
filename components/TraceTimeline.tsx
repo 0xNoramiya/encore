@@ -51,7 +51,7 @@ function Step({ step, n, live }: { step: AgentStep; n: number; live: boolean }) 
       </div>
       {step.summary && <p className="text-sm text-muted">{step.summary}</p>}
       {hasDetail && (
-        <button type="button" onClick={() => setOpen((v) => !v)} className="mt-1 text-xs font-bold text-accent" aria-expanded={open}>
+        <button type="button" onClick={() => setOpen((v) => !v)} className="inline-flex min-h-11 items-center text-sm font-bold text-accent" aria-expanded={open}>
           {open ? "Hide API details" : step.qloo?.length ? `Show the Qloo call${step.qloo.length > 1 ? "s" : ""}` : "Show input"}
         </button>
       )}
