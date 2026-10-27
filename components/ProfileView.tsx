@@ -136,7 +136,14 @@ export function ProfileView({ profile, window, items, seeds, avoid, steps, canEd
 
       {!building && sessions.length > 0 && (
         <section className="border-t border-rule py-8">
-          <h2 className="mb-4 font-display text-2xl">Sessions</h2>
+          <div className="mb-4 flex flex-wrap items-baseline justify-between gap-3">
+            <h2 className="font-display text-2xl">Sessions</h2>
+            {sessions.some((x) => x.started) && (
+              <Link href={`/p/${profile.id}/report`} className="font-bold text-accent underline-offset-4 hover:underline">
+                Engagement report
+              </Link>
+            )}
+          </div>
           <ul className="flex flex-col divide-y divide-rule">
             {sessions.map((s) => (
               <li key={s.id} className="flex flex-wrap items-baseline justify-between gap-2 py-3">

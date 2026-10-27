@@ -12,6 +12,7 @@ export interface SessionRow {
   started_at: string | null;
   ended_at: string | null;
   created_at: string;
+  is_example: boolean;
 }
 
 export interface Learned {

@@ -32,7 +32,7 @@ export async function clonePersona(templateId: string, workspaceId: string): Pro
     db().from("profile_items").select("*").eq("profile_id", template.id),
     db().from("profile_versions").select("*").eq("profile_id", template.id),
     db().from("agent_runs").select("*").eq("profile_id", template.id).in("kind", ["profile", "generic"]).eq("status", "done").order("created_at", { ascending: false }),
-    db().from("sessions").select("plan,profile_version").eq("profile_id", template.id).order("created_at", { ascending: false }).limit(1).maybeSingle(),
+    db().from("sessions").select("*").eq("profile_id", template.id).order("created_at"),
   ]);
 
   const latestRuns = (must(runs, "runs") as { kind: string }[]).filter((r, i, all) => all.findIndex((x) => x.kind === r.kind) === i);
@@ -42,7 +42,29 @@ export async function clonePersona(templateId: string, workspaceId: string): Pro
     items.data?.length ? db().from("profile_items").insert(strip(items.data)) : null,
     versions.data?.length ? db().from("profile_versions").insert(strip(versions.data)) : null,
     latestRuns.length ? db().from("agent_runs").insert(strip(latestRuns as Record<string, unknown>[])) : null,
-    session.data ? db().from("sessions").insert({ profile_id: clone.id, profile_version: session.data.profile_version, plan: session.data.plan }) : null,
   ]);
+
+  // Sessions (example history plus the ready one) and their reactions, with session ids remapped.
+  const sessions = (must(session, "sessions") ?? []) as { id: string; [k: string]: unknown }[];
+  if (sessions.length) {
+    const inserted = must(
+      await db()
+        .from("sessions")
+        .insert(sessions.map(({ id: _i, profile_id: _p, ...rest }) => ({ ...rest, profile_id: clone.id })))
+        .select("id,created_at"),
+      "clone sessions",
+    ) as { id: string; created_at: string }[];
+    // created_at is copied verbatim, so it identifies each copy; fall back to insert order.
+    const idMap = new Map(sessions.map((s, n) => [s.id, inserted.find((r) => r.created_at === s.created_at)?.id ?? inserted[n]?.id]));
+    const reactions = must(await db().from("reactions").select("*").in("session_id", sessions.map((s) => s.id)), "template reactions") as { session_id: string; [k: string]: unknown }[];
+    if (reactions.length) {
+      must(
+        await db()
+          .from("reactions")
+          .insert(reactions.map(({ id: _i, session_id, profile_id: _p, ...rest }) => ({ ...rest, session_id: idMap.get(session_id), profile_id: clone.id }))),
+        "clone reactions",
+      );
+    }
+  }
   return clone.id;
 }
