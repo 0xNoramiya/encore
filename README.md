@@ -112,6 +112,22 @@ fly secrets set QLOO_API_KEY=... ANTHROPIC_API_KEY=... SUPABASE_URL=... SUPABASE
 fly deploy
 ```
 
+## Demo video
+
+The demo video is generated from this repo (`demo/`), not hand-edited:
+
+- **Film and pictures of memory:** Higgsfield (Seedance 2.5) animates the app's own illustrations into sepia 8mm shots, plus period footage (a jazz club in silhouette, a needle drop, a 1950s TV full of static). No real people or likenesses.
+- **Voice, jazz and sound:** ElevenLabs for the narration (`eleven_v4`), an original jazz-trio score (`music_v2_5`) and sound effects (static, projector, vinyl crackle, needle). The Session Mode clips use the app's real read-aloud audio.
+- **Screen captures:** `demo/record.mjs` drives the production site with Playwright.
+- **Edit:** `demo/build.mjs` cuts and retimes the captures, mixes the audio (jazz ducked under the narration), and writes a [HyperFrames](https://hyperframes.dev) composition with film grain, TV static, captions and title cards.
+
+```bash
+npx tsx --env-file=.env.local demo/gen-audio.mts        # narration, score, sound effects
+PW_EXE=<chromium> node demo/record.mjs                  # screen captures (needs playwright)
+npx tsx --env-file=.env.local demo/voice-clips.mts      # the app's read-aloud clips
+node demo/build.mjs && (cd demo/video && npx hyperframes render --quality high --output ../renders/encore-demo.mp4)
+```
+
 ## The evidence, honestly
 
 - Long-term musical memory relies on brain regions that show relatively less atrophy and metabolic decline in Alzheimer's disease (Jacobsen et al., *Brain* 2015;138(8):2438-2450).
