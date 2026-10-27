@@ -13,6 +13,7 @@ import { CommonGround } from "./CommonGround";
 import { PlanSessionButton } from "./PlanSessionButton";
 import { ItemCard } from "./ItemCard";
 import { TracePanel, TraceTimeline } from "./TraceTimeline";
+import { YearsTimeline } from "./YearsTimeline";
 
 const ORDER: Domain[] = ["music", "film", "tv", "food", "place", "book"];
 const GRID: Record<Domain, string> = {
@@ -172,6 +173,7 @@ export function ProfileView({ profile, window, items, seeds, avoid, steps, canEd
 
       {!building && visible.length > 0 && (
         <>
+          {!isGroup && <YearsTimeline firstName={firstName} window={window} items={visible} />}
           {ORDER.map((d) => {
             const list = visible.filter((i) => i.domain === d);
             if (!list.length) return null;

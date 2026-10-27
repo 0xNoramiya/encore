@@ -40,12 +40,15 @@ export const SessionItemSchema = z.object({
   media: MediaSchema,
   why: z.object({ seedNames: z.array(z.string()), scores: z.array(z.number()) }),
   prompt: z.string().min(1).max(500),
+  /** The same prompt in the person's first language, when it isn't English. */
+  promptAlt: z.object({ lang: z.string(), text: z.string().min(1).max(500) }).optional(),
   durationSec: z.number().int().min(30).max(600),
 });
 
 export const SessionPlanSchema = z.object({
   title: z.string().min(1).max(120),
   intro: z.string().max(400),
+  language: z.string().optional(),
   items: z.array(SessionItemSchema).min(3).max(8),
 });
 
@@ -62,6 +65,7 @@ export const ModelPlanSchema = z.object({
         entityId: z.string().describe("Must be an entityId from the profile list"),
         song: z.string().optional().describe("For music: one title from that artist's notable songs"),
         prompt: z.string().describe("What the caregiver says. Recognition, not recall."),
+        promptNative: z.string().optional().describe("The same prompt in the person's first language, only when asked for"),
       }),
     )
     .min(6)
@@ -74,9 +78,14 @@ export type ModelPlan = z.infer<typeof ModelPlanSchema>;
  * "What year was…?" cause distress, so any prompt containing them is replaced.
  */
 const MEMORY_TEST = /\b(remember|recall|recollect|memor(y|ies) of)\b|do you know (who|what|where|when)|what (year|was the name)|can you (name|tell me (who|what|when))|who (is|was) (this|that|singing)/i;
+// The same rule for translated prompts: Spanish, French, Italian, Portuguese, German, Indonesian.
+const MEMORY_TEST_OTHER = /\b(recuerd\w*|acuerd\w*|souviens|souvenez|rappel\w*|ricord\w*|lembr\w*|erinner\w*|ingat\w*)\b|qui[eé]n (es|era|canta)|qu[eé] año/i;
+
+/** We never collect pronouns, so caregiver-facing copy that guesses one falls back to neutral text. */
+export const GENDERED = /\b(she|he|her|him|his|hers|herself|himself)\b/i;
 
 export function isSafePrompt(prompt: string): boolean {
-  return !MEMORY_TEST.test(prompt);
+  return !MEMORY_TEST.test(prompt) && !MEMORY_TEST_OTHER.test(prompt);
 }
 
 export function fallbackPrompt(kind: SessionKind, title: string, opts: { song?: string; year?: number | null; hometown?: string } = {}): string {
@@ -106,7 +115,7 @@ function songMedia(item: ProfileItem, song: string | undefined): Media {
   return m;
 }
 
-export function toSessionItem(item: ProfileItem, prompt: string, song: string | undefined, hometown: string): SessionItem {
+export function toSessionItem(item: ProfileItem, prompt: string, song: string | undefined, hometown: string, alt?: { lang: string; text?: string }): SessionItem {
   const kind = KIND_FOR_DOMAIN[item.domain];
   const chosenSong = kind === "song" ? (song && item.data.notableSongs?.includes(song) ? song : (item.media?.song ?? item.data.notableSongs?.[0])) : undefined;
   const safe = prompt && isSafePrompt(prompt) ? prompt.trim() : fallbackPrompt(kind, item.name, { song: chosenSong, year: item.year, hometown });
@@ -118,6 +127,8 @@ export function toSessionItem(item: ProfileItem, prompt: string, song: string | 
     media: kind === "song" ? songMedia(item, chosenSong) : { ...(item.media ?? {}) },
     why: { seedNames: item.why.map((w) => w.name), scores: item.why.map((w) => w.score) },
     prompt: safe,
+    // A translation is only kept if the English prompt was kept (so they say the same thing) and it is safe too.
+    ...(alt?.text && safe === prompt.trim() && isSafePrompt(alt.text) ? { promptAlt: { lang: alt.lang, text: alt.text.trim() } } : {}),
     durationSec: DEFAULT_DURATION[kind],
   };
 }
@@ -130,7 +141,13 @@ export const isSeedItem = (i: ProfileItem) => i.status === "promoted" && i.why.l
  * Turns the model's picks into a validated plan. Unknown or excluded entityIds
  * are dropped; if fewer than 6 survive, the deterministic composer fills in.
  */
-export function finalizePlan(model: ModelPlan | null, items: ProfileItem[], hometown: string, firstName: string): { plan: SessionPlan; dropped: string[] } {
+export function finalizePlan(
+  model: ModelPlan | null,
+  items: ProfileItem[],
+  hometown: string,
+  firstName: string,
+  language?: string | null,
+): { plan: SessionPlan; dropped: string[] } {
   const usable = new Map(items.filter((i) => i.status !== "excluded").map((i) => [i.entity_id, i]));
   const seen = new Set<string>();
   const dropped: string[] = [];
@@ -146,7 +163,7 @@ export function finalizePlan(model: ModelPlan | null, items: ProfileItem[], home
     if (isSeedItem(item) && seeds >= MAX_SEED_ITEMS) continue;
     if (isSeedItem(item)) seeds++;
     seen.add(m.entityId);
-    picked.push(toSessionItem(item, m.prompt, m.song, hometown));
+    picked.push(toSessionItem(item, m.prompt, m.song, hometown, language ? { lang: language, text: m.promptNative } : undefined));
   }
 
   if (picked.length < 6) {
@@ -162,7 +179,11 @@ export function finalizePlan(model: ModelPlan | null, items: ProfileItem[], home
 
   const plan = SessionPlanSchema.parse({
     title: model?.title?.trim() || `${firstName}’s session`,
-    intro: model?.intro?.trim() || "A gentle mix of music, pictures and tastes from the years that matter most.",
+    intro:
+      model?.intro?.trim() && !GENDERED.test(model.intro)
+        ? model.intro.trim()
+        : `A gentle mix of music, pictures and tastes from the years that matter most. Go at ${firstName}’s pace and linger wherever ${firstName} lights up.`,
+    ...(language && picked.some((p) => p.promptAlt) ? { language } : {}),
     items: picked.slice(0, 8),
   });
   return { plan, dropped };

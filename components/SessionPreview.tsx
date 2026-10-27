@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { GenericPlan } from "@/lib/agent/generic";
 import { compareSessions, flagMemoryTests } from "@/lib/compare";
+import { langCode, langLabel } from "@/lib/languages";
 import type { EraWindow } from "@/lib/era";
 import type { SessionItem, SessionPlan } from "@/lib/session";
 import { Provenance } from "./Provenance";
@@ -56,6 +57,11 @@ function EncoreList({ items, firstName, editable, onMove, onRemove }: { items: S
               {item.media.song && <span className="font-sans text-base text-muted"> · “{item.media.song}”</span>}
             </h3>
             <p className="mt-1.5 max-w-[60ch] font-display italic text-ink/85">“{item.prompt}”</p>
+            {item.promptAlt && (
+              <p lang={langCode(item.promptAlt.lang)} className="mt-1 max-w-[60ch] font-display italic text-ink/70">
+                <span className="mr-1.5 font-sans text-xs not-italic text-muted">{langLabel(item.promptAlt.lang)}</span>“{item.promptAlt.text}”
+              </p>
+            )}
             <div className="mt-2">
               {item.why.seedNames.length ? (
                 <Provenance why={item.why.seedNames.map((name, k) => ({ entityId: name, name, score: item.why.scores[k] }))} firstName={firstName} compact />
@@ -198,6 +204,11 @@ export function SessionPreview({ sessionId, profileId, firstName, plan: initial,
           </p>
           <h1 className="mt-1 font-display text-5xl leading-tight">{plan.title}</h1>
           <p className="mt-3 max-w-[62ch] text-lg text-ink/85">{plan.intro}</p>
+          {plan.language && (
+            <p className="mt-2 text-sm text-muted">
+              Prompts are also written in {langLabel(plan.language)}, {firstName}’s first language. Session Mode lets you switch between them.
+            </p>
+          )}
         </div>
         {canEdit && (
           <button

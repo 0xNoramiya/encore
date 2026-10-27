@@ -252,7 +252,7 @@ export function IntakeForm() {
           <Field id={`${ids}-film`} title="Films and TV mostly from" hint="Filled in from their hometown. Change it if they watched films from elsewhere, like Mexico.">
             <input id={`${ids}-film`} className={input} value={filmCountry} onChange={(e) => setFilmCountry(e.target.value)} placeholder="United States" />
           </Field>
-          <Field id={`${ids}-lang`} title="Languages they speak" hint="Optional. Separate with commas.">
+          <Field id={`${ids}-lang`} title="Languages they speak" hint="First language first. If it isn’t English, Encore also writes the prompts in it.">
             <input id={`${ids}-lang`} className={input} value={languages} onChange={(e) => setLanguages(e.target.value)} placeholder="English, Spanish" />
           </Field>
         </div>

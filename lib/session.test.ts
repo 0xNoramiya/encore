@@ -76,6 +76,12 @@ describe("finalizePlan", () => {
     expect(() => SessionPlanSchema.parse(plan)).not.toThrow();
   });
 
+  it("replaces an intro that guesses pronouns", () => {
+    const { plan } = finalizePlan({ title: "t", intro: "Linger wherever he lights up.", items: [] }, profile, "Brooklyn", "Roberto");
+    expect(plan.intro).not.toMatch(/\bhe\b/);
+    expect(plan.intro).toContain("Roberto");
+  });
+
   it("rejects songs not in the artist's notable songs", () => {
     const { plan } = finalizePlan({ title: "t", intro: "i", items: [{ entityId: "singerone", song: "Invented Song", prompt: "Listen." }] }, profile, "Brooklyn", "Dorothy");
     expect(plan.items[0].media.song).toBe("Song A");
@@ -109,5 +115,45 @@ describe("composeFallback", () => {
     expect(items[0].entityId).toBe("singerone");
     expect(items.map((i) => i.entityId)).not.toContain("scaryfilm");
     expect(new Set(items.map((i) => i.kind)).size).toBeGreaterThanOrEqual(4);
+  });
+});
+
+describe("translated prompts", () => {
+  it("keeps a safe translation alongside the English prompt", () => {
+    const { plan } = finalizePlan(
+      { title: "t", intro: "i", items: [{ entityId: "singerone", prompt: "This is Singer One. Shall we listen?", promptNative: "Este es Singer One. ¿Lo escuchamos juntos?" }] },
+      profile,
+      "San Antonio",
+      "Roberto",
+      "Spanish",
+    );
+    expect(plan.language).toBe("Spanish");
+    expect(plan.items[0].promptAlt).toEqual({ lang: "Spanish", text: "Este es Singer One. ¿Lo escuchamos juntos?" });
+  });
+
+  it("drops translations that test memory, and translations of replaced prompts", () => {
+    const { plan } = finalizePlan(
+      {
+        title: "t",
+        intro: "i",
+        items: [
+          { entityId: "singerone", prompt: "This is Singer One.", promptNative: "¿Se acuerda de esta canción?" },
+          { entityId: "filmone", prompt: "Do you remember this film?", promptNative: "Esta es una película bonita." },
+        ],
+      },
+      profile,
+      "San Antonio",
+      "Roberto",
+      "Spanish",
+    );
+    expect(plan.items[0].promptAlt).toBeUndefined();
+    expect(plan.items.find((i) => i.entityId === "filmone")!.promptAlt).toBeUndefined();
+  });
+});
+
+describe("isSafePrompt in other languages", () => {
+  it("catches common memory-test phrasing", () => {
+    for (const p of ["¿Recuerdas esta canción?", "¿Te acuerdas de él?", "Tu te souviens ?", "Ingat lagu ini?", "¿Quién canta esto?"]) expect(isSafePrompt(p), p).toBe(false);
+    expect(isSafePrompt("Este es Pedro Infante. ¿Lo escuchamos juntos?")).toBe(true);
   });
 });

@@ -7,6 +7,7 @@ import { generateText, Output } from "ai";
 import { db, must } from "../db";
 import { decadesLabel, reminiscenceWindow } from "../era";
 import { loadProfileBundle, type AgentStep, type Profile, type ProfileItem } from "../profiles";
+import { nativeLanguage } from "../languages";
 import { finalizePlan, ModelPlanSchema, type ModelPlan, type SessionPlan } from "../session";
 import { llm, noThinking } from "./llm";
 
@@ -65,7 +66,11 @@ Rules:
 - Food prompts are sensory ("Imagine the smell of pizza fresh from the oven.") and never suggest eating anything.
 - For music items, set song to one title from that artist's listed songs.
 - Use ${profile.first_name}'s name or "you"; no other pronouns.
-- title: short and warm, no colon. intro: one or two sentences telling the caregiver the shape of today's session.`;
+- title: short and warm, no colon. intro: one or two sentences telling the caregiver the shape of today's session.${
+    nativeLanguage(profile.languages)
+      ? `\n- ${profile.first_name}'s first language is ${nativeLanguage(profile.languages)}. For every item also write promptNative: the same prompt in natural ${nativeLanguage(profile.languages)}, in the warm, respectful register families use with elders. Same rules: recognition, never recall. Keep proper names and song titles as they are.`
+      : ""
+  }`;
 }
 
 export async function composeSession(profile: Profile): Promise<{ sessionId: string; plan: SessionPlan; steps: AgentStep[] }> {
@@ -106,7 +111,8 @@ export async function composeSession(profile: Profile): Promise<{ sessionId: str
     steps.push({ id: "compose", kind: "tool", tool: "compose_session", label: "Composer unavailable, used the built-in arc", status: "error", ms: Date.now() - t0 });
   }
 
-  const { plan, dropped } = finalizePlan(model, items, profile.hometown.split(",")[0], profile.first_name);
+  const language = profile.kind === "group" ? null : nativeLanguage(profile.languages);
+  const { plan, dropped } = finalizePlan(model, items, profile.hometown.split(",")[0], profile.first_name, language);
   steps.push({
     id: "validate",
     kind: "deterministic",

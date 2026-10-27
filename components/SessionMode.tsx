@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import type { Reaction } from "@/lib/learning";
+import { langCode, langLabel } from "@/lib/languages";
 import type { SessionItem, SessionPlan } from "@/lib/session";
 
 const REACTION_BUTTONS: { value: Reaction; label: string; short: string }[] = [
@@ -161,7 +162,8 @@ function Media({ item }: { item: SessionItem }) {
   return null;
 }
 
-function Stage({ item, firstName }: { item: SessionItem; firstName: string }) {
+function Stage({ item, firstName, native }: { item: SessionItem; firstName: string; native: boolean }) {
+  const alt = native ? item.promptAlt : undefined;
   const portrait = item.kind === "film_clip" || item.kind === "tv_clip" || item.kind === "book";
   return (
     <div className="mx-auto grid w-full max-w-6xl flex-1 items-center gap-6 px-6 py-4 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] md:gap-14 md:px-10 md:py-6">
@@ -182,7 +184,9 @@ function Stage({ item, firstName }: { item: SessionItem; firstName: string }) {
         <p className="text-[1.75rem] text-muted">{KIND_WORD[item.kind]}</p>
         <h1 className="font-display text-[2.75rem] leading-[1.05] text-ink md:text-7xl">{item.title}</h1>
         {item.year && <p className="-mt-3 text-3xl text-muted">{item.year}</p>}
-        <p className="max-w-[30ch] font-display text-3xl leading-snug text-ink/90">{item.prompt}</p>
+        <p lang={alt ? langCode(alt.lang) : undefined} className="max-w-[30ch] font-display text-3xl leading-snug text-ink/90">
+          {alt ? alt.text : item.prompt}
+        </p>
         {item.kind === "food" && <p className="text-[1.75rem] text-muted">Follow {firstName}’s diet and texture plan.</p>}
         <Media item={item} />
       </div>
@@ -198,6 +202,8 @@ export function SessionMode({ sessionId, firstName, plan, canEdit }: { sessionId
   const items = plan.items;
   const current = fallback ?? items[index];
   const headingRef = useRef<HTMLDivElement>(null);
+  // Default to the person's first language when the plan has it; the caregiver can switch.
+  const [native, setNative] = useState(Boolean(plan.language));
 
   useEffect(() => {
     headingRef.current?.focus();
@@ -247,17 +253,29 @@ export function SessionMode({ sessionId, firstName, plan, canEdit }: { sessionId
             {fallback ? "A favourite" : `${index + 1} of ${items.length}`}
           </p>
         )}
-        {phase === "item" || phase === "upset" ? (
-          <button type="button" onClick={() => setPhase("paused")} className="min-h-12 rounded-full border border-ink/30 px-5 text-lg font-bold">
-            Pause
-          </button>
-        ) : (
-          <span className="w-20" />
-        )}
+        <div className="flex items-center gap-2">
+          {plan.language && phase === "item" && (
+            <button
+              type="button"
+              onClick={() => setNative((v) => !v)}
+              aria-label={native ? "Show prompts in English" : `Show prompts in ${langLabel(plan.language)}`}
+              className="min-h-12 rounded-full border border-ink/30 px-4 text-lg font-bold"
+            >
+              {native ? "English" : langLabel(plan.language)}
+            </button>
+          )}
+          {phase === "item" || phase === "upset" ? (
+            <button type="button" onClick={() => setPhase("paused")} className="min-h-12 rounded-full border border-ink/30 px-5 text-lg font-bold">
+              Pause
+            </button>
+          ) : (
+            <span className="w-20" />
+          )}
+        </div>
       </header>
 
       <div ref={headingRef} tabIndex={-1} className="flex flex-1 flex-col outline-none">
-        {phase === "item" && <Stage key={current.entityId} item={current} firstName={firstName} />}
+        {phase === "item" && <Stage key={current.entityId} item={current} firstName={firstName} native={native} />}
 
         {phase === "upset" && (
           <div className="mx-auto flex max-w-3xl flex-1 flex-col justify-center gap-8 px-6 py-10 text-center">

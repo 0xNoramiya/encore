@@ -56,7 +56,9 @@ export function AfterSession({ sessionId, profileId, firstName, canEdit, learned
 
       {learned && (
         <>
-          <blockquote className="mt-8 max-w-[56ch] border-l-4 border-accent pl-6 font-display text-2xl leading-relaxed text-ink sm:text-3xl">{learned.narrative}</blockquote>
+          <blockquote className="mt-8 max-w-[56ch] border-l-4 border-accent pl-6 font-display text-2xl leading-relaxed text-ink sm:text-3xl">
+            {learned.narrative}
+          </blockquote>
 
           <dl className="mt-10 grid gap-x-10 gap-y-4 text-lg sm:grid-cols-2">
             {(["sang_along", "lit_up"] as const).map((r) => {
@@ -135,18 +137,25 @@ export function AfterSession({ sessionId, profileId, firstName, canEdit, learned
 
               {!expanding && newItems.length > 0 && (
                 <div className="mt-8 grid grid-cols-2 gap-x-5 gap-y-8 sm:grid-cols-3 lg:grid-cols-5">
-                  {newItems.map((i) => (
-                    <article key={i.id} className="flex flex-col gap-2">
-                      {i.media?.image ?? i.data.image ? (
-                        <img src={(i.media?.image ?? i.data.image)!} alt="" className={`${i.domain === "music" ? "aspect-square" : i.domain === "food" || i.domain === "place" ? "aspect-[4/3]" : "aspect-[2/3]"} w-full rounded-md object-cover`} />
-                      ) : (
-                        <div className="aspect-square w-full rounded-md bg-ink" aria-hidden />
-                      )}
-                      <p className="text-xs text-muted">{DOMAINS[i.domain].label}</p>
-                      <h4 className="font-display text-lg leading-snug">{i.name}</h4>
-                      <Provenance why={i.why} firstName={firstName} compact />
-                    </article>
-                  ))}
+                  {newItems.map((i) => {
+                    const src = i.media?.image ?? i.data.image;
+                    return (
+                      <article key={i.id} className="flex flex-col gap-2">
+                        {src ? (
+                          <img
+                            src={src}
+                            alt=""
+                            className={`${i.domain === "music" ? "aspect-square" : i.domain === "food" || i.domain === "place" ? "aspect-[4/3]" : "aspect-[2/3]"} w-full rounded-md object-cover`}
+                          />
+                        ) : (
+                          <div className="aspect-square w-full rounded-md bg-ink" aria-hidden />
+                        )}
+                        <p className="text-xs text-muted">{DOMAINS[i.domain].label}</p>
+                        <h4 className="font-display text-lg leading-snug">{i.name}</h4>
+                        <Provenance why={i.why} firstName={firstName} compact />
+                      </article>
+                    );
+                  })}
                 </div>
               )}
             </section>
