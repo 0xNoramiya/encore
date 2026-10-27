@@ -27,7 +27,9 @@ const enc = ["-an", "-c:v", "libx264", "-preset", "veryfast", "-crf", "18", "-pi
 /** A slice of a recording, retimed to `target` seconds. */
 function seg(name, src, from, to, target, { w = 1920, h = 1080 } = {}) {
   const speed = (to - from) / target;
-  ff(["-ss", String(from), "-to", String(to), "-i", `${A}/rec/${src}.webm`, "-vf", `setpts=PTS/${speed.toFixed(4)},fps=30,scale=${w}:${h}:flags=lanczos`, ...enc, `${MEDIA}/${name}.mp4`]);
+  // Playwright draws the page at CSS size into a canvas scaled by deviceScaleFactor (1.5): crop the real content first.
+  const crop = `crop=${Math.round(w / 1.5)}:${Math.round(h / 1.5)}:0:0`;
+  ff(["-ss", String(from), "-to", String(to), "-i", `${A}/rec/${src}.webm`, "-vf", `${crop},setpts=PTS/${speed.toFixed(4)},fps=30,scale=${w}:${h}:flags=lanczos`, ...enc, `${MEDIA}/${name}.mp4`]);
 }
 function concat(name, parts) {
   const list = `${MEDIA}/${name}.txt`;
@@ -248,7 +250,7 @@ const html = `<!doctype html>
   .e-line { margin: 0; font-family: "Young Serif", serif; font-size: 46px; max-width: 1300px; line-height: 1.25; }
   .e-meta { margin: 0; font-size: 34px; color: #5f584e; }
   .e-note { margin: 0; font-size: 26px; color: #5f584e; }
-  .cap { position: absolute; left: 50%; bottom: 54px; transform: translateX(-50%); max-width: 1480px; width: max-content; padding: 12px 28px; background: rgba(20,18,15,0.74); color: #f5efe4; font-size: 34px; line-height: 1.35; border-radius: 10px; text-align: center; z-index: 30; }
+  .cap { position: absolute; left: 50%; bottom: 54px; transform: translateX(-50%); max-width: 1480px; width: max-content; padding: 12px 28px; background: rgba(20,18,15,0.74); color: #f5efe4; font-size: 38px; line-height: 1.35; border-radius: 10px; text-align: center; z-index: 30; }
   .fx { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
   #vignette { background: radial-gradient(ellipse at center, rgba(0,0,0,0) 55%, rgba(0,0,0,0.5) 100%); z-index: 40; }
   #flicker { background: #fff7e6; mix-blend-mode: overlay; z-index: 45; opacity: 0; }
